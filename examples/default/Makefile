@@ -36,6 +36,7 @@ USEMODULE += ps
 USEMODULE += vtimer
 USEMODULE += defaulttransceiver
 USEMODULE += config
+USEMODULE += crypto
 
 FEATURES_OPTIONAL += transceiver
 FEATURES_OPTIONAL += config

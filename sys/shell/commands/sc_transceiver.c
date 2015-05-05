@@ -24,6 +24,9 @@
 #include <string.h>
 #include <inttypes.h>
 
+#define USE_RC5     //DEBUG!!!!
+#include "crypto/rc5.h"
+
 #ifdef MODULE_NET_IF
 #include "net_if.h"
 #endif
@@ -251,6 +254,29 @@ int _transceiver_send_handler(int argc, char **argv)
     char text_msg[TEXT_SIZE];
     memset(text_msg, 0, TEXT_SIZE);
     strcpy(text_msg, argv[2]);
+
+#ifdef USE_RC5
+    char text_enc[TEXT_SIZE], enc_msg[TEXT_SIZE];
+    uint8_t key[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    cipher_context_t context;
+    block_cipher_interface_t cipher = rc5_interface;
+    printf("Initializing cipher: %s whit size %d\n", cipher.name, sizeof(context.context));
+    int enc_res = cipher.BlockCipher_init(&context, cipher.BlockCipherInfo_getPreferredBlockSize(), 16, key);
+    printf("RC5_INIT: %d\n", enc_res);
+
+    if(enc_res > 0) 
+    {
+        int i=0;
+        enc_res = cipher.BlockCipher_encrypt( &context, (uint8_t*)text_msg, (uint8_t*)enc_msg);
+        printf("RC5_ENC: %d\n", enc_res);
+        memcpy(text_msg, text_enc, TEXT_SIZE);
+
+        for (i = 0; i < TEXT_SIZE; i++) {
+           printf("%02X ", text_msg[i]);
+        }
+    }
+#endif
+
 
 #if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
     memset(&p, 0, sizeof(ieee802154_packet_t));

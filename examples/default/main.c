@@ -31,6 +31,9 @@
 #include "shell_commands.h"
 #include "board_uart0.h"
 
+#define USE_RC5     //DEBUG!!!!
+#include "crypto/rc5.h"
+
 #if FEATURE_PERIPH_RTC
 #include "periph/rtc.h"
 #endif
@@ -71,10 +74,23 @@ void *radio(void *arg)
 
     msg_init_queue(msg_q, RCV_BUFFER_SIZE);
 
+    #ifdef USE_RC5
+    //init cipher
+    uint8_t key[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    uint8_t dec_msg[255];
+    cipher_context_t context;
+    block_cipher_interface_t cipher = rc5_interface;
+    printf("Initializing cipher: %s whit size %d\n", cipher.name, sizeof(context.context));
+    int enc_res = cipher.BlockCipher_init(&context, cipher.BlockCipherInfo_getPreferredBlockSize(), 16, key);
+    printf("RC5_INIT: %d\n", enc_res);
+    #endif
+
     while (1) {
         msg_receive(&m);
 
         if (m.type == PKT_PENDING) {
+
+
 #if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
             p = (ieee802154_packet_t*) m.content.ptr;
             printf("Got radio packet:\n");
@@ -97,6 +113,19 @@ void *radio(void *arg)
             printf("\tDst:\t%u\n", p->dst);
             printf("\tLQI:\t%u\n", p->lqi);
             printf("\tRSSI:\t%u\n", p->rssi);
+
+            #ifdef USE_RC5
+            printf("Decrypting...");
+            enc_res = cipher.BlockCipher_decrypt( &context, p->data, dec_msg);
+            printf("%d\n", enc_res);
+            if(enc_res>0) 
+            {
+                p->length = strlen((char*)dec_msg);
+                memcpy(p->data, dec_msg, p->length);   
+
+                //printf("%s\n", dec_msg);
+            }
+            #endif
 
             for (i = 0; i < p->length; i++) {
                 printf("%02X ", p->data[i]);
