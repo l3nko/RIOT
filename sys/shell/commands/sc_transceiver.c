@@ -24,7 +24,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#define USE_RC5     //DEBUG!!!!
+//#define USE_RC5     //DEBUG!!!!
 #include "crypto/rc5.h"
 
 #ifdef MODULE_NET_IF

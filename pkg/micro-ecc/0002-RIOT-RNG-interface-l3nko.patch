@@ -102,7 +102,7 @@ index 96726a9..5517e35 100644
 -        {
 -            return 0;
 -        }
-+        //if(!g_rng((uint8_t *)l_private, sizeof(l_private)) || (l_tries++ >= MAX_TRIES))
++       //if(!g_rng((uint8_t *)l_private, sizeof(l_private)) || (l_tries++ >= MAX_TRIES))
 +		if(random_read((char *)l_private, sizeof(l_private))!=sizeof(l_private) || (l_tries++ >= MAX_TRIES))
 +		{
 +			random_poweroff();
@@ -140,10 +140,10 @@ index 96726a9..5517e35 100644
      {
      repeat:
 -        if(!g_rng((uint8_t *)k, sizeof(k)) || (l_tries++ >= MAX_TRIES))
-+        //if(!g_rng((uint8_t *)k, sizeof(k)) || (l_tries++ >= MAX_TRIES))
-+    	if(random_read((char *)k, sizeof(k))!=sizeof(k) || (l_tries++ >= MAX_TRIES))
++       //if(!g_rng((uint8_t *)k, sizeof(k)) || (l_tries++ >= MAX_TRIES))
++       if(random_read((char *)k, sizeof(k))!=sizeof(k) || (l_tries++ >= MAX_TRIES))
          {
-+    		random_poweroff();
++       random_poweroff();
              return 0;
          }
          
@@ -152,10 +152,10 @@ index 96726a9..5517e35 100644
      do
      {
 -        if(!g_rng((uint8_t *)l_tmp, sizeof(l_tmp)) || (l_tries++ >= MAX_TRIES))
-+        //if(!g_rng((uint8_t *)l_tmp, sizeof(l_tmp)) || (l_tries++ >= MAX_TRIES))
-+    	if(random_read((char *)l_tmp, sizeof(l_tmp))!=sizeof(l_tmp) || (l_tries++ >= MAX_TRIES))
++       //if(!g_rng((uint8_t *)l_tmp, sizeof(l_tmp)) || (l_tries++ >= MAX_TRIES))
++       if(random_read((char *)l_tmp, sizeof(l_tmp))!=sizeof(l_tmp) || (l_tries++ >= MAX_TRIES))
          {
-+    		random_poweroff();
++       random_poweroff();
              return 0;
          }
      } while(vli_isZero(l_tmp));

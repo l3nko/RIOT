@@ -15,7 +15,7 @@ MODULE:=$(shell basename $(CURDIR))
 
 .PHONY: all clean patch reset
 
-all: patch
+all: #patch
 	make -C $(CURDIR)/$(PKG_NAME)
 	make $(BINDIR)$(MODULE).a
 
@@ -30,9 +30,9 @@ $(CURDIR)/$(PKG_NAME):
 	git clone $(PKG_URL) $@ && \
 		cd $@ && git reset --hard $(PKG_VERSION)
 
-clean::
-	# Reset package to checkout state.
-	cd $(CURDIR)/$(PKG_NAME) || true && \
+#clean::
+#	# Reset package to checkout state.
+#	cd $(CURDIR)/$(PKG_NAME) || true && \
 		git clean -x -f && \
 		git reset --hard $(PKG_VERSION)
 
