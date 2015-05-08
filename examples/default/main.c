@@ -33,6 +33,7 @@
 
 #define USE_RC5     //DEBUG!!!!
 #include "crypto/rc5.h"
+#include "uECC.h"
 
 #if FEATURE_PERIPH_RTC
 #include "periph/rtc.h"
@@ -75,6 +76,13 @@ void *radio(void *arg)
     msg_init_queue(msg_q, RCV_BUFFER_SIZE);
 
     #ifdef USE_RC5
+    //init uECC
+    random_init();	//need for uECC
+    printf("Initializing uECC...");
+    uint8_t publicKey[uECC_BYTES*2], privateKey[uECC_BYTES];
+    int resECC = uECC_make_key(publicKey, privateKey);
+    printf("%d\n", resECC);
+
     //init cipher
     uint8_t key[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     uint8_t dec_msg[255];

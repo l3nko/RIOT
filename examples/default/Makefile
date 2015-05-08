@@ -36,7 +36,10 @@ USEMODULE += ps
 USEMODULE += vtimer
 USEMODULE += defaulttransceiver
 USEMODULE += config
+
+#add by l3nko
 USEMODULE += crypto
+USEPKG += micro-ecc
 
 FEATURES_OPTIONAL += transceiver
 FEATURES_OPTIONAL += config
