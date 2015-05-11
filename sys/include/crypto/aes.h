@@ -146,7 +146,7 @@ uint8_t aes_get_preferred_block_size(void);
   * Interface to access the functions
   *
   */
-extern block_cipher_interface_t aes_inerface;
+extern block_cipher_interface_t aes_interface;
 
 #ifdef __cplusplus
 }

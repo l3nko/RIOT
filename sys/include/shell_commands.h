@@ -31,6 +31,10 @@ extern "C" {
 #define DISK_GET_BLOCK_SIZE     "dget_bsize"
 #define DISK_READ_SECTOR_CMD    "dread_sec"
 #define DISK_READ_BYTES_CMD     "dread"
+    
+//add by l3nko
+//#define MODULE_CONFIG
+    
 
 extern const shell_command_t _shell_command_list[];
 

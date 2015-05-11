@@ -174,6 +174,14 @@ extern int _ipv6_nc_manage(int argc, char **argv);
 extern int _ipv6_nc_routers(int argc, char **argv);
 #endif
 
+//#ifdef MODULE_CONFIG
+extern int _uECC_get_set_public_handler(int argc, char **argv);			//TODO: fare #ifdef
+extern int _uECC_get_set_private_handler(int argc, char **argv);
+extern int _uECC_generate_keys(int argc, char **argv);
+extern int _uECC_encrypt(int argc, char **argv);
+extern int _uECC_decrypt(int argc, char **argv);
+//#endif
+
 const shell_command_t _shell_command_list[] = {
     {"reboot", "Reboot the node", _reboot_handler},
 #ifdef MODULE_CONFIG
@@ -287,5 +295,12 @@ const shell_command_t _shell_command_list[] = {
     {"ncache", "manage neighbor cache by hand", _ipv6_nc_manage },
     {"routers", "IPv6 default router list", _ipv6_nc_routers },
 #endif
+//#ifdef MODULE_CONFIG
+    {"public", "get or set the public key used for uECC", _uECC_get_set_public_handler},		//TODO: fare un #ifdef
+    {"private", "get or set the private key used for uECC", _uECC_get_set_private_handler},
+    {"genecc", "generate public/private key for uECC", _uECC_generate_keys},
+    {"encecc", "encryption string with uECC", _uECC_encrypt},
+    {"dececc", "decryption string with uECC", _uECC_decrypt},
+//#endif
     {NULL, NULL, NULL}
 };

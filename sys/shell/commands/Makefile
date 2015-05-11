@@ -75,4 +75,7 @@ endif
 # should be changed once the issue has been resolved
 SRC += sc_rtc.c
 
+#USEMODULE += crypto
+SRC += sc_uECC.c
+
 include $(RIOTBASE)/Makefile.base

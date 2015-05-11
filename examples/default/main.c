@@ -33,6 +33,7 @@
 
 //#define USE_RC5     //DEBUG!!!!
 #include "crypto/rc5.h"
+#include "crypto/aes.h"
 #include "uECC.h"
 
 #if FEATURE_PERIPH_RTC
@@ -178,7 +179,7 @@ static void shell_putchar(int c)
 }
 
 int main(void)
-{
+{    
     shell_t shell;
     (void) posix_open(uart0_handler_pid, 0);
 
@@ -198,47 +199,47 @@ int main(void)
 
     shell_init(&shell, NULL, UART0_BUFSIZE, shell_readc, shell_putchar);
 
-    //init uECC
-	random_init();	//need for uECC
-	printf("Initializing uECC...");
-
-	//public-private key
-#define CPU0
-#ifdef CPU0
-	uint8_t privateKey[uECC_BYTES] = {0x05, 0xB8, 0x30, 0x6A, 0x86, 0xEE, 0x26, 0x48, 0xEC, 0x63, 0x12, 0x9C, 0xFC, 0xBD, 0xF3, 0x42, 0x10, 0xF2, 0x6C, 0x12};
-	uint8_t publicKey[uECC_BYTES+1] = {0x03, 0x41, 0x9A, 0xC3, 0xED, 0xD4, 0xB6, 0x51, 0x75, 0xA1, 0xE3, 0x59, 0xA7, 0xF4, 0x31, 0xF6, 0x11, 0x89, 0xC2, 0x22, 0xC2};
-#else
-	uint8_t privateKey[uECC_BYTES] = {0xED, 0x64, 0xC4, 0x32, 0x36, 0x64, 0xE5, 0xD6, 0xBD, 0xBF, 0xB6, 0x25, 0x5F, 0xA1, 0xEA, 0x4D, 0x4D, 0xFB, 0x33, 0x3E};
-	uint8_t publicKey[uECC_BYTES+1] = {0x03, 0x97, 0xAC, 0x7B, 0x03, 0x1A, 0x88, 0x76, 0x8D, 0x1C, 0x07, 0x62, 0xF7, 0xEC, 0x29, 0x92, 0x45, 0x17, 0x1B, 0x01, 0xB5};
-#endif
-	uint8_t decPubliKey[uECC_BYTES*2];
-	uECC_decompress(publicKey, decPubliKey);
-
-	//int resECC0 = uECC_make_key(decPubliKey, privateKey);
-	//uECC_compress(decPubliKey, publicKey);
-
-	//sahred key
-	uint8_t sharedKey[uECC_BYTES];
-	int resECC = uECC_shared_secret(decPubliKey, privateKey, sharedKey);
-
-	printf("%d\n", resECC);
-	if(resECC>0)
-	{
-		printf("My private key is:");
-		for(int i=0; i<uECC_BYTES; i++)
-			printf(" 0x%02X,", privateKey[i]);
-		printf("\n");
-
-		printf("My COMPRESSED-public key is:");
-		for(int i=0; i<uECC_BYTES+1; i++)
-			printf(" 0x%02X,", publicKey[i]);
-		printf("\n");
-
-		printf("My shared key is:");
-		for(int i=0; i<uECC_BYTES; i++)
-			printf(" 0x%02X,", sharedKey[i]);
-		printf("\n");
-	}
+//    //init uECC
+//	random_init();	//need for uECC
+//	printf("Initializing uECC...");
+//
+//	//public-private key
+//#define CPU0
+//#ifdef CPU0
+//	uint8_t privateKey[uECC_BYTES] = {0x05, 0xB8, 0x30, 0x6A, 0x86, 0xEE, 0x26, 0x48, 0xEC, 0x63, 0x12, 0x9C, 0xFC, 0xBD, 0xF3, 0x42, 0x10, 0xF2, 0x6C, 0x12};
+//	uint8_t publicKey[uECC_BYTES+1] = {0x03, 0x41, 0x9A, 0xC3, 0xED, 0xD4, 0xB6, 0x51, 0x75, 0xA1, 0xE3, 0x59, 0xA7, 0xF4, 0x31, 0xF6, 0x11, 0x89, 0xC2, 0x22, 0xC2};
+//#else
+//	uint8_t privateKey[uECC_BYTES] = {0xED, 0x64, 0xC4, 0x32, 0x36, 0x64, 0xE5, 0xD6, 0xBD, 0xBF, 0xB6, 0x25, 0x5F, 0xA1, 0xEA, 0x4D, 0x4D, 0xFB, 0x33, 0x3E};
+//	uint8_t publicKey[uECC_BYTES+1] = {0x03, 0x97, 0xAC, 0x7B, 0x03, 0x1A, 0x88, 0x76, 0x8D, 0x1C, 0x07, 0x62, 0xF7, 0xEC, 0x29, 0x92, 0x45, 0x17, 0x1B, 0x01, 0xB5};
+//#endif
+//	uint8_t decPubliKey[uECC_BYTES*2];
+//	uECC_decompress(publicKey, decPubliKey);
+//
+//	//int resECC0 = uECC_make_key(decPubliKey, privateKey);
+//	//uECC_compress(decPubliKey, publicKey);
+//
+//	//sahred key
+//	uint8_t sharedKey[uECC_BYTES];
+//	int resECC = uECC_shared_secret(decPubliKey, privateKey, sharedKey);
+//
+//	printf("%d\n", resECC);
+//	if(resECC>0)
+//	{
+//		printf("My private key is:");
+//		for(int i=0; i<uECC_BYTES; i++)
+//			printf(" 0x%02X,", privateKey[i]);
+//		printf("\n");
+//
+//		printf("My COMPRESSED-public key is:");
+//		for(int i=0; i<uECC_BYTES+1; i++)
+//			printf(" 0x%02X,", publicKey[i]);
+//		printf("\n");
+//
+//		printf("My shared key is:");
+//		for(int i=0; i<uECC_BYTES; i++)
+//			printf(" 0x%02X,", sharedKey[i]);
+//		printf("\n");
+//	}
 
     shell_run(&shell);
     return 0;
