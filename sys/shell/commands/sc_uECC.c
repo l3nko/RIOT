@@ -40,9 +40,14 @@ int _uECC_get_set_public_handler(int argc, char **argv)
         
         //copy key (from hex string)
         char *hexStr = argv[1];
-        for(int i=0; i < (ECC_KEY_SIZE*2); i++) {
-            sscanf(hexStr, "%2x", &sc_dest_public[i]);
+        uint8_t acc;
+        printf("\nreading: ");
+        for(int i=0; i < ECC_KEY_SIZE; i++) {
+            sscanf(hexStr, "%2hhx", &acc);//&sc_dest_public[i]);
             hexStr += 2;
+            
+            printf("%02x", acc);
+            sc_dest_public[i] = acc;
         }
         
 //        printf("Copied key: ");
@@ -72,8 +77,8 @@ int _uECC_get_set_private_handler(int argc, char **argv)
         }
         
         //copy key
-        const uint8_t *arg = (uint8_t*)argv[1];
-        memcpy(sc_private, arg, ECC_KEY_SIZE);		// -----> TODO fare come public_key
+        //const uint8_t *arg = (uint8_t*)argv[1];
+        //memcpy(sc_private, arg, ECC_KEY_SIZE);		// -----> TODO fare come public_key
     }
     return 0;
 }
