@@ -77,5 +77,6 @@ SRC += sc_rtc.c
 
 #USEMODULE += crypto
 SRC += sc_uECC.c
+SRC += crc32.c
 
 include $(RIOTBASE)/Makefile.base

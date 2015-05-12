@@ -9,6 +9,7 @@
 
 #include "uECC.h"
 #include "crypto/aes.h"
+#include "crypto/rc5.h"
 
 #define ECC_KEY_SIZE uECC_BYTES*2
 
@@ -19,18 +20,29 @@ static uint8_t sc_dest_public[ECC_KEY_SIZE];
 
 static cipher_context_t sc_context;
 
+/* CRC 32 */
+uint32_t crc32(uint32_t crc, const void *buf, size_t size);
+
+void printBuffer(uint8_t *ptr, uint8_t length, uint8_t withCRC)
+{
+    for (int i=0; i<length; i++) {
+        printf("%02x",ptr[i]);
+    }
+    if (withCRC == 1) {
+        uint32_t calcCRC = crc32(0, ptr, length);
+        printf(" (0x%08X)", calcCRC);
+    }
+    printf("\n");
+}
+
 /* checked for type safety */
 int _uECC_get_set_public_handler(int argc, char **argv)
 {
     if (argc < 2) {
         printf("My public key: ");
-        for(int i=0; i<ECC_KEY_SIZE; i++)
-            printf("%02x", sc_public[i]);
-        printf("\n");
+        printBuffer(sc_public, ECC_KEY_SIZE, 1);
     }
     else {
-        printf("Setting destination publick key\n");
-        
         //check string arg length
         size_t argLen = strlen(argv[1]);
         if (argLen < (ECC_KEY_SIZE*2)) {
@@ -40,20 +52,20 @@ int _uECC_get_set_public_handler(int argc, char **argv)
         
         //copy key (from hex string)
         char *hexStr = argv[1];
-        uint8_t acc;
-        printf("\nreading: ");
+        //uint8_t acc;
+        //printf("\nreading: ");
         for(int i=0; i < ECC_KEY_SIZE; i++) {
-            sscanf(hexStr, "%2hhx", &acc);//&sc_dest_public[i]);
+            sscanf(hexStr, "%2hhx", &sc_dest_public[i]);
             hexStr += 2;
             
-            printf("%02x", acc);
-            sc_dest_public[i] = acc;
+            //printf("%02x", acc);
+            //sc_dest_public[i] = acc;
         }
+        //printf("\n");
         
-//        printf("Copied key: ");
-//        for(int i=0; i<ECC_KEY_SIZE; i++)
-//            printf("%02x", sc_dest_public[i]);
-//        printf("\n");
+        //calculate crc32
+        uint32_t dest_crc = crc32(0, sc_dest_public, ECC_KEY_SIZE);
+        printf("Calculated crc: 0x%X\n", dest_crc);
     }
     return 0;
 }
@@ -98,6 +110,8 @@ int _uECC_generate_keys(int argc, char **argv)
         }
     }
     puts("Keys generated");
+    printf("My public key: ");
+    printBuffer(sc_public, ECC_KEY_SIZE, 1);
     
     return 0;
 }
@@ -118,21 +132,29 @@ int _uECC_encrypt(int argc, char **argv)
         }
         else {
             printf("Current sahred key:");
-            for(int i=0; i<ECC_KEY_SIZE; i++)
-                printf("%02x", sharedKey[i]);
-            printf("\n");
+            printBuffer(sharedKey, uECC_BYTES, 1);
         }
+        //aes_interface  OR rc5_interface
         //set symmetric-key
-        aes_interface.setupKey(&sc_context, sharedKey, uECC_BYTES);
-
-        //use AES(128) to enc plaintext
-        uint8_t cipherText[100];
-        aes_interface.BlockCipher_encrypt(&sc_context, (uint8_t*)argv[1], cipherText);
-        printf("Cipher text: ");
-        for (int i=0; i<(int)strlen(argv[1]); i++) {
-            printf("%02x",cipherText[i]);
+        int resInit = aes_interface.BlockCipher_init(&sc_context, AES_BLOCK_SIZE, uECC_BYTES, sharedKey);
+        if (resInit == 0) {
+            puts("Error initializing BlockCipher");
+            return 1;
         }
-        printf("\n");
+        
+        uint8_t plainText[AES_BLOCK_SIZE];
+        memset(plainText, 0, AES_BLOCK_SIZE);
+        memcpy(plainText, argv[1], strlen(argv[1]));
+
+        printf("Plain text: ");
+        printBuffer(plainText, AES_BLOCK_SIZE, 0);
+
+        //use cipher to enc plaintext
+        uint8_t cipherText[AES_BLOCK_SIZE];
+        aes_interface.BlockCipher_encrypt(&sc_context, plainText, cipherText);
+
+        printf("Cipher text: ");
+        printBuffer(cipherText, AES_BLOCK_SIZE, 0);
     }
     return 0;
 }
@@ -162,8 +184,8 @@ int _uECC_decrypt(int argc, char **argv)
         
         //use AES(128) to enc plaintext
         uint8_t plaintext[100];
-        aes_interface.BlockCipher_decrypt(&sc_context, plaintext, argv[1]);
-        for (int i=0; i<strlen(argv[1]); i++) {
+        aes_interface.BlockCipher_decrypt(&sc_context, plaintext, (uint8_t*)argv[1]);
+        for (int i=0; i<(int)strlen(argv[1]); i++) {
             printf("%2x",plaintext[i]);
         }
     }
