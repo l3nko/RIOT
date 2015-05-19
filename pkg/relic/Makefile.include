@@ -1,0 +1,2 @@
+CFLAGS += -I$(RIOTBASE)/pkg/relic/relic-build/include
+#LINKFLAGS += -L$(RIOTBASE)/pkg/relic/relic-build/lib -lrelic_s

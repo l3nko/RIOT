@@ -180,6 +180,10 @@ extern int _uECC_get_set_private_handler(int argc, char **argv);
 extern int _uECC_generate_keys(int argc, char **argv);
 extern int _uECC_encrypt(int argc, char **argv);
 extern int _uECC_decrypt(int argc, char **argv);
+
+extern int pbc_start_handler(int argc, char **argv);
+extern int pbc_agree_handler(int argc, char **argv);
+extern int pbc_private_handler(int argc, char **argv);
 //#endif
 
 const shell_command_t _shell_command_list[] = {
@@ -301,6 +305,11 @@ const shell_command_t _shell_command_list[] = {
     {"genecc", "generate public/private key for uECC", _uECC_generate_keys},
     {"encecc", "encryption string with uECC", _uECC_encrypt},
     {"dececc", "decryption string with uECC", _uECC_decrypt},
+
+    {"pbc_start", "initialize PBC with relic lib", pbc_start_handler},
+    {"pbc_private", "Get or set private key for PBC", pbc_private_handler},
+    {"pbc_agree", "obtain shared key for other node", pbc_agree_handler},
 //#endif
+    
     {NULL, NULL, NULL}
 };

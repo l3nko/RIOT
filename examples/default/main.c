@@ -36,6 +36,10 @@
 #include "crypto/aes.h"
 #include "uECC.h"
 
+////#include <assert.h>
+//#include "relic/relic.h"
+
+
 #if FEATURE_PERIPH_RTC
 #include "periph/rtc.h"
 #endif
@@ -194,7 +198,7 @@ int main(void)
 #ifdef FEATURE_PERIPH_RTC
     rtc_init();
 #endif
-
+	
     (void) puts("Welcome to RIOT!");
 
     shell_init(&shell, NULL, UART0_BUFSIZE, shell_readc, shell_putchar);
@@ -240,6 +244,24 @@ int main(void)
 //			printf(" 0x%02X,", sharedKey[i]);
 //		printf("\n");
 //	}
+    
+//    static char thisID[10];
+//    static sokaka_t privateKey;
+//    static bn_st masterKey;
+//    static char nodeID[10];
+//    
+//    if (core_init() != STS_OK)
+//        puts("Relic core init failed");
+//    
+//    if (pc_param_set_any() != STS_OK)
+//        puts("Relice param set any failed");
+//    
+//    bn_init(&masterKey, BN_DIGS);
+//    bn_read_str(&masterKey, "123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF", 64, 16);	//master key received from PKG
+//    
+//    puts("Generting Sokaka private key:");
+//    cp_sokaka_gen_prv(privateKey, thisID, strlen(thisID), &masterKey);
+    
 
     shell_run(&shell);
     return 0;

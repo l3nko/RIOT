@@ -23,7 +23,7 @@ static cipher_context_t sc_context;
 /* CRC 32 */
 uint32_t crc32(uint32_t crc, const void *buf, size_t size);
 
-void printBuffer(uint8_t *ptr, uint8_t length, uint8_t withCRC)
+static void printBuffer(uint8_t *ptr, uint8_t length, uint8_t withCRC)
 {
     for (int i=0; i<length; i++) {
         printf("%02x",ptr[i]);
