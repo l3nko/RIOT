@@ -40,8 +40,9 @@ USEMODULE += config
 #add by l3nko
 USEMODULE += crypto
 USEPKG += micro-ecc
+
 USEPKG += relic
-#CFLAGS += -I/Users/magenta/Desktop/l3nko-RIOT/pkg/relic/relic-build/include
+#CFLAGS += -I/Users/l3nko/Desktop/projects/l3nko-RIOT/pkg/relic/relic-src/include
 #LINKFLAGS += -L/Users/magenta/Desktop/l3nko-RIOT/pkg/relic/relic-build/lib -lrelic_s
 
 FEATURES_OPTIONAL += transceiver
