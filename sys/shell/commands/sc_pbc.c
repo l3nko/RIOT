@@ -5,8 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+//#include <assert.h>
 #include "relic/relic.h"
+#include "periph/random.h"
+
 
 static char thisID[10];
 static sokaka_t privateKey;
@@ -27,7 +29,7 @@ void printSokaka(sokaka_t t)
     puts("g1");
     g1_print(t->s1);
     
-    puts("s2");
+    puts("g2");
     g2_print(t->s2);
 }
 
@@ -52,7 +54,18 @@ int pbc_start_handler(int argc, char **argv)
 
     snprintf(thisID, 10, "%s", argv[1]);
     
-    if (core_init() != STS_OK) {
+    //random generator
+    char random_buffer[SEED_SIZE];
+    random_init();
+    random_poweron();
+    random_read(random_buffer, SEED_SIZE);
+    random_poweroff();
+    
+    puts("Random buffer:");
+    printBuffer(random_buffer, SEED_SIZE, 0);
+    
+    if (core_init_riot(random_buffer) != STS_OK) {
+//    if (core_init() != STS_OK) {
         puts("Relic core init failed");
         return 1;
     }
@@ -65,6 +78,9 @@ int pbc_start_handler(int argc, char **argv)
     /* Simulate PKG. The private key should be loaded statically in real deployments. */
     bn_init(&masterKey, BN_DIGS);
     bn_read_str(&masterKey, "123456789ABCDEF123456789ABCDEF123456789ABCDEF123456789ABCDEF", 64, 16);	//master key received from PKG
+    
+    //extern ssize_t (*real_read)(int fd, void *buf, size_t count);
+    //nread = real_read(_native_tap_fd, &frame, sizeof(union eth_frame));
     
     if(cp_sokaka_gen_prv(privateKey, thisID, strlen(thisID), &masterKey) != STS_OK)
         puts("Relic sokake generation FAILED");
