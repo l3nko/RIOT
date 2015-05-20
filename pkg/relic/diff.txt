@@ -1,0 +1,101 @@
+diff --git include/relic_core.h include/relic_core.h
+old mode 100644
+new mode 100755
+index 2bb7ad3..939c6db
+--- include/relic_core.h
++++ include/relic_core.h
+@@ -423,6 +423,8 @@ extern ctx_t *core_ctx;
+  */
+ int core_init(void);
+ 
++int core_init_riot(char buffer[SEED_SIZE]);	/* RIOT-OS */
++
+ /**
+  * Finalizes the library.
+  *
+diff --git include/relic_rand.h include/relic_rand.h
+old mode 100644
+new mode 100755
+index 2b851ff..76f7ab8
+--- include/relic_rand.h
++++ include/relic_rand.h
+@@ -74,7 +74,7 @@
+ /**
+  * Initializes the pseudo-random number generator.
+  */
+-void rand_init(void);
++void rand_init_riot(char buffer[SEED_SIZE]);	//used in RIOT-OS --> was: void rand_init(void);
+ 
+ /**
+  * Finishes the pseudo-random number generator.
+diff --git src/rand/relic_rand_core.c src/rand/relic_rand_core.c
+old mode 100644
+new mode 100755
+index 0c40326..258f327
+--- src/rand/relic_rand_core.c
++++ src/rand/relic_rand_core.c
+@@ -77,8 +77,7 @@
+ /*============================================================================*/
+ /* Public definitions                                                         */
+ /*============================================================================*/
+-
+-void rand_init() {
++void rand_init_riot(char buffer[SEED_SIZE]) {	//was: void rand_init() {
+ 	uint8_t buf[SEED_SIZE];
+ 
+ #if RAND == UDEV
+@@ -92,7 +91,15 @@ void rand_init() {
+ 
+ #if SEED == ZERO
+ 
+-	memset(buf, 0, SEED_SIZE);
++    /* RIOT-OS */
++    if(buffer == NULL) {
++        //puts("memset");
++		memset(buf, 0, SEED_SIZE);
++    }
++    else {
++        //puts("memcpy");
++    	memcpy(buf, buffer, SEED_SIZE);
++    }
+ 
+ #elif SEED == DEV || SEED == UDEV
+ 	int fd, c, l;
+diff --git src/relic_core.c src/relic_core.c
+old mode 100644
+new mode 100755
+index 825bf0d..1d01522
+--- src/relic_core.c
++++ src/relic_core.c
+@@ -25,6 +25,7 @@
+  *
+  * Implementation of the library basic functions.
+  *
++ * @version $Id$
+  * @ingroup relic
+  */
+ 
+@@ -72,6 +73,11 @@ thread ctx_t *core_ctx = NULL;
+ #endif
+ 
+ int core_init(void) {
++    core_init_riot(NULL);
++}
++
++int core_init_riot(char buffer[SEED_SIZE]) {
++
+ 	if (core_ctx == NULL) {
+ 		core_ctx = &(first_ctx);
+ 	}
+@@ -105,7 +111,10 @@ int core_init(void) {
+ 
+ 	TRY {
+ 		arch_init();
+-		rand_init();
++        
++        /* RIOT-OS */
++        rand_init_riot(buffer);		//was: rand_init();
++        
+ #ifdef WITH_FP
+ 		fp_prime_init();
+ #endif
