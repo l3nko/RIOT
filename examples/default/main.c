@@ -39,6 +39,9 @@
 ////#include <assert.h>
 //#include "relic/relic.h"
 
+//SENSOR AUTHENTICATION
+#include "sensor_atuh.h"
+
 
 #if FEATURE_PERIPH_RTC
 #include "periph/rtc.h"
