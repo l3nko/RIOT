@@ -8,11 +8,14 @@
 #ifndef SENSOR_ATUH_H_
 #define SENSOR_ATUH_H_
 
+#include <stdint.h>
+#include <stdlib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define MAX_SA_PKT_LENGTH		20	/* max bytes received */
+#define MAX_SA_PKT_LENGTH		33	/* max bytes received: HASH_SIZE+CHALLENGE_SIZE */
 
 typedef enum {
 	SA_HELLO 				= 0,

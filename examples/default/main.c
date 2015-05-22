@@ -42,6 +42,9 @@
 //SENSOR AUTHENTICATION
 #include "sensor_atuh.h"
 
+//compiler-fix
+//#define MODULE_TRANSCEIVER
+
 
 #if FEATURE_PERIPH_RTC
 #include "periph/rtc.h"
@@ -142,6 +145,18 @@ void *radio(void *arg)
 
             p->processing--;
             puts("\n");
+
+            //sensor authentication
+            sa_pkt_t pkt;
+            uint8_t res = get_packet_fromBuffer(p->data, p->length,&pkt);
+            if(res < 0)
+            	printf("main: warning pkt from buffer not contain entire buffer\n");
+            else
+            	printf("main: received sensor auth pkt with id 0x%02X\n", pkt.id);
+
+            if (sa_manager(&pkt) != 0)
+            	printf("main: sensor auth manager error\n");
+
 #endif
 
         }
@@ -264,7 +279,6 @@ int main(void)
 //    
 //    puts("Generting Sokaka private key:");
 //    cp_sokaka_gen_prv(privateKey, thisID, strlen(thisID), &masterKey);
-    
 
     shell_run(&shell);
     return 0;

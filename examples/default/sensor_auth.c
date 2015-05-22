@@ -37,18 +37,23 @@ static uint8_t send_packet_Server(sa_pkt_t *pkt);
 uint8_t get_packet_fromBuffer(uint8_t *buffer, size_t length, sa_pkt_t *pkt)
 {
 	uint8_t id = buffer[0];
+
+	if(pkt == NULL) {
+		DEBUG("sensor_auth: get pkt from buffer to null pointer")
+		return -MAX_SA_PKT_LENGTH;
+	}
+
 	pkt->id = buffer[0];
 	if(pkt->id >= SA_NUM_OF_PKT_TYPES) {
 		pkt->id = SA_UNKNOWN_TYPE;
 		pkt->size = 0;
-		pkt->data = NULL;
 	}
 	else {
-		pkt->size = min(length-1, MAX_SA_PKT_LENGTH);
-		memcpy(pkt->data, buffer[1], pkt.size);
+		pkt->size = length-1 < MAX_SA_PKT_LENGTH ? length-1 : MAX_SA_PKT_LENGTH;	//min(length-1, MAX_SA_PKT_LENGTH);
+		memcpy(pkt->data, &buffer[1], pkt->size);
 	}
 
-	return pkt.size - (length-1);
+	return pkt->size - (length-1);
 }
 
 static uint8_t send_packet(sa_pkt_t *pkt)
@@ -84,7 +89,7 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 		sa_pkt_t req;
 		req.id = SA_HASH_ID;
 		req.size = HASH_SIZE; /* SHA2 - 256 bit -> 32 byte */
-		md_masp_sh256(req.data, thisID, ID_SIZE);	/* calculate SHA-256 hash */
+		md_map_sh256(req.data, thisID, ID_SIZE);	/* calculate SHA-256 hash */
 		send_packet(&req);
 	}
 	else if(pkt->id == SA_HASH_ID) {
@@ -104,10 +109,10 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 		//compute hash with ID || challenge num
 		uint8_t hashInput[ID_SIZE+CHALLENGE_SIZE];
 		memcpy(hashInput, sensorID, ID_SIZE);
-		memcpy(hashInput[ID_SIZE], thisChallengeNum, CHALLENGE_SIZE);
-		md_masp_sh256(req.data, hashInput, ID_SIZE+1);
-
-		req->data[HASH_SIZE] = thisChallengeNum;
+		memcpy(&hashInput[ID_SIZE], thisChallengeNum, CHALLENGE_SIZE);
+		md_map_sh256(req.data, hashInput, ID_SIZE+1);
+		//concatenate challenge
+		memcpy(&req.data[HASH_SIZE], thisChallengeNum, CHALLENGE_SIZE);
 		send_packet(&req);
 	}
 	else if(pkt->id == SA_CHALLENGE_ID) {
@@ -115,8 +120,8 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 		uint8_t hashCalc[HASH_SIZE];
 		uint8_t hashInput[ID_SIZE+CHALLENGE_SIZE];
 		memcpy(hashInput, thisID, ID_SIZE);
-		memcpy(hashInput[ID_SIZE], pkt->data[HASH_SIZE], CHALLENGE_SIZE);	//challenge number received
-		md_masp_sh256(hashCalc, hashInput, ID_SIZE+CHALLENGE_SIZE);
+		memcpy(&hashInput[ID_SIZE], &pkt->data[HASH_SIZE], CHALLENGE_SIZE);	//challenge number received
+		md_map_sh256(hashCalc, hashInput, ID_SIZE+CHALLENGE_SIZE);
 
 		sa_pkt_t resp;
 		resp.id = SA_RESP_CHALLENGE;

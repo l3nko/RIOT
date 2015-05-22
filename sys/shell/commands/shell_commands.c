@@ -184,6 +184,9 @@ extern int _uECC_decrypt(int argc, char **argv);
 extern int pbc_start_handler(int argc, char **argv);
 extern int pbc_agree_handler(int argc, char **argv);
 extern int pbc_private_handler(int argc, char **argv);
+
+//sensor authentication
+extern int sa_init_handler(int argc, char **argv);
 //#endif
 
 const shell_command_t _shell_command_list[] = {
@@ -309,6 +312,8 @@ const shell_command_t _shell_command_list[] = {
     {"pbc_start", "initialize PBC with relic lib", pbc_start_handler},
     {"pbc_private", "Get or set private key for PBC", pbc_private_handler},
     {"pbc_agree", "obtain shared key for other node", pbc_agree_handler},
+
+	{"sa_init", "Initialize procedure of sensor authentication", sa_init_handler},
 //#endif
     
     {NULL, NULL, NULL}
