@@ -101,6 +101,7 @@ void *radio(void *arg)
         msg_receive(&m);
 
         if (m.type == PKT_PENDING) {
+            puts("main: PKT_PENDING");
 
 
 #if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
@@ -154,7 +155,7 @@ void *radio(void *arg)
             else
             	printf("main: received sensor auth pkt with id 0x%02X\n", pkt.id);
 
-            if (sa_manager(&pkt) != 0)
+            if (sa_manager(&pkt, p->src) != 0)
             	printf("main: sensor auth manager error\n");
 
 #endif

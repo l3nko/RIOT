@@ -7,7 +7,12 @@
 #include "sensor_atuh.h"
 #include "relic.h"
 
-#define ENABLE_DEBUG    (0)
+#include "transceiver.h"
+#include "msg.h"
+
+#define _TC_TYPE            TRANSCEIVER_NATIVE
+
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 #define ID_SIZE			(20)
@@ -30,16 +35,14 @@ static uint8_t otherEphemeralKey[EPHEMERAL_SIZE];
 static void generate_ephemeral_key();
 static void generate_challenge_number();
 
-static uint8_t send_packet(sa_pkt_t *pkt);
+static uint8_t send_packet(sa_pkt_t *pkt, uint16_t dst);
 static uint8_t send_packet_Server(sa_pkt_t *pkt);
 /* ***************** */
 
 uint8_t get_packet_fromBuffer(uint8_t *buffer, size_t length, sa_pkt_t *pkt)
 {
-	uint8_t id = buffer[0];
-
 	if(pkt == NULL) {
-		DEBUG("sensor_auth: get pkt from buffer to null pointer")
+        DEBUG("sensor_auth: get pkt from buffer to null pointer\n");
 		return -MAX_SA_PKT_LENGTH;
 	}
 
@@ -56,33 +59,67 @@ uint8_t get_packet_fromBuffer(uint8_t *buffer, size_t length, sa_pkt_t *pkt)
 	return pkt->size - (length-1);
 }
 
-static uint8_t send_packet(sa_pkt_t *pkt)
+static uint8_t send_packet(sa_pkt_t *pkt, uint16_t dst)
 {
-	return 0;
+    DEBUG("sensor_auth: sending pkt with id 0x%02X to %u\n", pkt->id, dst);
+    
+    if (transceiver_pid == KERNEL_PID_UNDEF) {
+        puts("Transceiver not initialized");
+        return -pkt->size;
+    }
+    
+    radio_packet_t p;
+    transceiver_command_t tcmd;
+    tcmd.transceivers = _TC_TYPE;
+    tcmd.data = &p;
+
+    // copy sa pkt id + data
+    uint8_t data[MAX_SA_PKT_LENGTH];
+    data[0] = pkt->id;
+    memcpy(&data[1], pkt->data, pkt->size);
+    
+    p.data = data;
+    p.length = pkt->size+1;
+    p.dst = dst;
+    
+    msg_t mesg;
+    mesg.type = SND_PKT;
+    mesg.content.ptr = (char *) &tcmd;
+    
+    uint8_t resp = (uint8_t)msg_send(&mesg, transceiver_pid);
+    if(resp == 1)
+        DEBUG("sc_sensor auth: packet sent\n");
+    else
+        printf("sc_sensor auth: error packet not sent %d\n", resp);
+    
+    
+	return resp;
 }
 
 static uint8_t send_packet_Server(sa_pkt_t *pkt)
 {
+    DEBUG("sensor_auth: sending pkt to SERVER with id 0x%02X\n", pkt->id);
+    (void)pkt;
 	return 0;
 }
 
-uint8_t start_authentication()
-{
-	sa_pkt_t req;
-	req.id = SA_HELLO;
-	req.size = 0;
+//uint8_t start_authentication()
+//{
+//	sa_pkt_t req;
+//	req.id = SA_HELLO;
+//	req.size = 0;
+//
+//	challengeSuccess = 0;	//reset challenge value
+//	return send_packet(&req, 0);
+//}
 
-	challengeSuccess = 0;	//reset challenge value
-	return send_packet(&req);
-}
-
-uint8_t sa_manager(sa_pkt_t *pkt) {
-	DEBUG("sensor_auth: packet received with type: %0x02X", pkt->id);
+uint8_t sa_manager(sa_pkt_t *pkt, uint16_t src) {
+	DEBUG("sensor_auth: packet received with type 0x%02X and size %lu\n", pkt->id, pkt->size);
 	if(pkt->id == SA_HELLO) {
 		sa_pkt_t resp;
 		resp.id = SA_HELLO_RESP;
 		resp.size = 0;
-		send_packet(&resp);
+		send_packet(&resp, src);
 		challengeSuccess = false;	//reset challenge value
 	}
 	else if(pkt->id == SA_HELLO_RESP){
@@ -90,7 +127,7 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 		req.id = SA_HASH_ID;
 		req.size = HASH_SIZE; /* SHA2 - 256 bit -> 32 byte */
 		md_map_sh256(req.data, thisID, ID_SIZE);	/* calculate SHA-256 hash */
-		send_packet(&req);
+		send_packet(&req, src);
 	}
 	else if(pkt->id == SA_HASH_ID) {
 		sa_pkt_t req;
@@ -113,7 +150,7 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 		md_map_sh256(req.data, hashInput, ID_SIZE+1);
 		//concatenate challenge
 		memcpy(&req.data[HASH_SIZE], thisChallengeNum, CHALLENGE_SIZE);
-		send_packet(&req);
+		send_packet(&req, src);
 	}
 	else if(pkt->id == SA_CHALLENGE_ID) {
 		/* check HASH with this ID and challenge number received*/
@@ -127,15 +164,15 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 		resp.id = SA_RESP_CHALLENGE;
 		resp.size = 1;
 		if(memcmp(hashCalc, pkt->data, HASH_SIZE) == 0) {
-			DEBUG("sensor_auth: ID challenge SUCCESS")
+            DEBUG("sensor_auth: ID challenge SUCCESS\n");
 			challengeSuccess = true;
 		}
 		else {
-			DEBUG("sensor_auth: ID challenge FAIL !!!")
+            DEBUG("sensor_auth: ID challenge FAIL !!!\n");
 			challengeSuccess = false;
 		}
 		resp.data[0] = challengeSuccess;
-		send_packet(&resp);
+		send_packet(&resp, src);
 	}
 	else if(pkt->id == SA_RESP_CHALLENGE) {
 		challengeSuccess = pkt->data[0];
@@ -146,10 +183,10 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 			req.id = SA_GW_KEY;
 			req.size = EPHEMERAL_SIZE;
 			memcpy(req.data, thisEphemeralKey, EPHEMERAL_SIZE);
-			send_packet(&req);
+			send_packet(&req, src);
 		}
 		else {
-			DEBUG("sensor_auth: challenge response NO !!");
+			DEBUG("sensor_auth: challenge response NO !!\n");
 		}
 	}
 	else if(pkt->id == SA_GW_KEY) {
@@ -160,11 +197,11 @@ uint8_t sa_manager(sa_pkt_t *pkt) {
 		req.id = SA_GW_KEY;
 		req.size = EPHEMERAL_SIZE;
 		memcpy(req.data, thisEphemeralKey, EPHEMERAL_SIZE);
-		send_packet(&req);
+		send_packet(&req, src);
 	}
 	else {
 		/* unknown type */
-		DEBUG("sensor_auth: packet type unknown: %0x02X", pkt->id);
+		DEBUG("sensor_auth: packet type unknown: %0x02X\n", pkt->id);
 		return 1;
 	}
 	return 0;

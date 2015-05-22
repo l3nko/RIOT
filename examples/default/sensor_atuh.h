@@ -44,17 +44,17 @@ typedef struct {
  */
 uint8_t get_packet_fromBuffer(uint8_t *buffer, size_t length, sa_pkt_t *pkt);
 
-/*
- * Start authentication procedure
- * output: 0 OK else FAIL
- */
-uint8_t start_authentication();
+///*
+// * Start authentication procedure
+// * output: 0 OK else FAIL
+// */
+//uint8_t start_authentication();
 
 /*
  * Manage a packet received for authentication procedure
  * output: 0 OK else FAIL
  */
-uint8_t sa_manager(sa_pkt_t *pkt) ;
+uint8_t sa_manager(sa_pkt_t *pkt, uint16_t src);
 
 
 #ifdef __cplusplus

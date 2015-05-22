@@ -24,7 +24,7 @@ if [ "${COMMAND}" = 'create' ]; then
         COUNT="${DEFCOUNT}"
     fi
 
-    sudo ifconfig ${BRNAME} create || exit 1
+    sudo ifconfig ${BRNAME} create #|| exit 1
     echo "upping ${BRNAME}"
     sudo ifconfig ${BRNAME} up || exit 1
 
