@@ -10,6 +10,8 @@
 #include "transceiver.h"
 #include "msg.h"
 
+#include "periph/random.h"
+
 #define _TC_TYPE            TRANSCEIVER_NATIVE
 
 #define ENABLE_DEBUG    (1)
@@ -32,8 +34,8 @@ static uint8_t thisEphemeralKey[EPHEMERAL_SIZE];
 static uint8_t otherEphemeralKey[EPHEMERAL_SIZE];
 
 /* PRIVATE FUNCTIONS */
-static void generate_ephemeral_key();
-static void generate_challenge_number();
+static void generate_ephemeral_key(void);
+static void generate_challenge_number(void);
 
 static uint8_t send_packet(sa_pkt_t *pkt, uint16_t dst);
 static uint8_t send_packet_Server(sa_pkt_t *pkt);
@@ -114,7 +116,7 @@ static uint8_t send_packet_Server(sa_pkt_t *pkt)
 //}
 
 uint8_t sa_manager(sa_pkt_t *pkt, uint16_t src) {
-	DEBUG("sensor_auth: packet received with type 0x%02X and size %lu\n", pkt->id, pkt->size);
+	//DEBUG("sensor_auth: packet received with type 0x%02X and size %lu\n", pkt->id, pkt->size);
 	if(pkt->id == SA_HELLO) {
 		sa_pkt_t resp;
 		resp.id = SA_HELLO_RESP;
@@ -132,7 +134,8 @@ uint8_t sa_manager(sa_pkt_t *pkt, uint16_t src) {
 	else if(pkt->id == SA_HASH_ID) {
 		sa_pkt_t req;
 		req.id = SA_GET_ID;
-		req.size = 0;
+		req.size = HASH_SIZE;
+		memcpy(req.data, pkt->data, HASH_SIZE);
 		send_packet_Server(&req);	//OSS: send packet to OMA-DM server
 	}
 	else if (pkt->id == SA_RESP_ID) {
@@ -165,18 +168,19 @@ uint8_t sa_manager(sa_pkt_t *pkt, uint16_t src) {
 		resp.size = 1;
 		if(memcmp(hashCalc, pkt->data, HASH_SIZE) == 0) {
             DEBUG("sensor_auth: ID challenge SUCCESS\n");
-			challengeSuccess = true;
+			challengeSuccess = 1;
 		}
 		else {
             DEBUG("sensor_auth: ID challenge FAIL !!!\n");
-			challengeSuccess = false;
+			challengeSuccess = 0;
 		}
 		resp.data[0] = challengeSuccess;
 		send_packet(&resp, src);
 	}
 	else if(pkt->id == SA_RESP_CHALLENGE) {
 		challengeSuccess = pkt->data[0];
-		if(challengeSuccess == true) {	/* challenge success */
+		if(challengeSuccess == 1) {	/* challenge success */
+			DEBUG("sensor_auth: received challenge SUCCESS\n");
 			generate_ephemeral_key();
 			//send generated ephemeral key
 			sa_pkt_t req;
@@ -194,10 +198,13 @@ uint8_t sa_manager(sa_pkt_t *pkt, uint16_t src) {
 		//send generated ephemeral key
 		generate_ephemeral_key();
 		sa_pkt_t req;
-		req.id = SA_GW_KEY;
+		req.id = SA_SENSOR_KEY;
 		req.size = EPHEMERAL_SIZE;
 		memcpy(req.data, thisEphemeralKey, EPHEMERAL_SIZE);
 		send_packet(&req, src);
+	}
+	else if(pkt->id == SA_SENSOR_KEY) {
+		DEBUG("sensor_auth: sensor authentication COMPLETED !!!\n");
 	}
 	else {
 		/* unknown type */
@@ -207,12 +214,22 @@ uint8_t sa_manager(sa_pkt_t *pkt, uint16_t src) {
 	return 0;
 }
 
-static void generate_ephemeral_key() {
-	//thisEphemeralKey = //TODO: random buffer!!!!!!
-	memset(thisEphemeralKey, 0, EPHEMERAL_SIZE);
+static void generate_ephemeral_key(void) {
+	//memset(thisEphemeralKey, 0, EPHEMERAL_SIZE);
+	DEBUG("sensor_auth: generating ephemeral key...\n");
+
+	/*init and power on rng */
+	//random_poweron();
+	random_read((char*)thisEphemeralKey, sizeof(thisEphemeralKey));
 }
 
-static void generate_challenge_number() {
-	//thisEphemeralKey = //TODO: random buffer!!!!!!
-	memset(thisChallengeNum, 0, CHALLENGE_SIZE);
+static void generate_challenge_number(void) {
+	//memset(thisChallengeNum, 0, CHALLENGE_SIZE);
+	DEBUG("sensor_auth: generating challenge number...\n");
+
+	/*init and power on rng */
+	random_poweron();
+
+	//random_read((char*)thisChallengeNum, sizeof(thisChallengeNum));
+	//TODO: con wuesta si ha stack smashing !!!!
 }

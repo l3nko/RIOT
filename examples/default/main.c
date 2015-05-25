@@ -41,6 +41,7 @@
 
 //SENSOR AUTHENTICATION
 #include "sensor_atuh.h"
+#include "periph/random.h"
 
 //compiler-fix
 //#define MODULE_TRANSCEIVER
@@ -280,6 +281,8 @@ int main(void)
 //    
 //    puts("Generting Sokaka private key:");
 //    cp_sokaka_gen_prv(privateKey, thisID, strlen(thisID), &masterKey);
+
+    random_init();
 
     shell_run(&shell);
     return 0;

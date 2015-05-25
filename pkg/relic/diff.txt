@@ -79,7 +79,7 @@ index 825bf0d..1d01522
  #endif
  
  int core_init(void) {
-+    core_init_riot(NULL);
++    return core_init_riot(NULL);
 +}
 +
 +int core_init_riot(char buffer[SEED_SIZE]) {

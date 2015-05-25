@@ -187,6 +187,7 @@ extern int pbc_private_handler(int argc, char **argv);
 
 //sensor authentication
 extern int sa_init_handler(int argc, char **argv);
+extern int sa_server_handler(int argc, char **argv);
 //#endif
 
 const shell_command_t _shell_command_list[] = {
@@ -314,6 +315,7 @@ const shell_command_t _shell_command_list[] = {
     {"pbc_agree", "obtain shared key for other node", pbc_agree_handler},
 
 	{"sa_init", "Initialize procedure of sensor authentication", sa_init_handler},
+	{"sa_server", "Send SA_AUTH procedure response GET_ID", sa_server_handler},
 //#endif
     
     {NULL, NULL, NULL}
