@@ -44,7 +44,7 @@
 #include "periph/random.h"
 
 //compiler-fix
-//#define MODULE_TRANSCEIVER
+#define MODULE_TRANSCEIVER
 
 
 #if FEATURE_PERIPH_RTC
@@ -102,7 +102,7 @@ void *radio(void *arg)
         msg_receive(&m);
 
         if (m.type == PKT_PENDING) {
-            puts("main: PKT_PENDING");
+//            puts("main: PKT_PENDING");
 
 
 #if MODULE_AT86RF231 || MODULE_CC2420 || MODULE_MC1322X
@@ -122,11 +122,11 @@ void *radio(void *arg)
             p = (radio_packet_t *) m.content.ptr;
 
             printf("Got radio packet:\n");
-            printf("\tLength:\t%u\n", p->length);
-            printf("\tSrc:\t%u\n", p->src);
-            printf("\tDst:\t%u\n", p->dst);
-            printf("\tLQI:\t%u\n", p->lqi);
-            printf("\tRSSI:\t%u\n", p->rssi);
+//            printf("\tLength:\t%u\n", p->length);
+//            printf("\tSrc:\t%u\n", p->src);
+//            printf("\tDst:\t%u\n", p->dst);
+//            printf("\tLQI:\t%u\n", p->lqi);
+//            printf("\tRSSI:\t%u\n", p->rssi);
 
             #ifdef USE_RC5
             printf("Decrypting...");
@@ -150,7 +150,7 @@ void *radio(void *arg)
 
             //sensor authentication
             sa_pkt_t pkt;
-            uint8_t res = get_packet_fromBuffer(p->data, p->length,&pkt);
+            int8_t res = get_packet_fromBuffer(p->data, p->length,&pkt);
             if(res < 0)
             	printf("main: warning pkt from buffer not contain entire buffer\n");
             else

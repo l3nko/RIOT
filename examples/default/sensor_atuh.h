@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#define MAX_SA_PKT_LENGTH		33	/* max bytes received: HASH_SIZE+CHALLENGE_SIZE */
+#define MAX_SA_PKT_LENGTH		35	/* max bytes received: HASH_SIZE+ CHALLENGE_SIZE + 1 (pkt id) */
 
 typedef enum {
 	SA_HELLO 				= 0,
@@ -42,7 +42,7 @@ typedef struct {
  *	Parse packet from buffer
  * output: 0 OK else FAIL (packet size difference)
  */
-uint8_t get_packet_fromBuffer(uint8_t *buffer, size_t length, sa_pkt_t *pkt);
+int8_t get_packet_fromBuffer(uint8_t *buffer, size_t length, sa_pkt_t *pkt);
 
 ///*
 // * Start authentication procedure
