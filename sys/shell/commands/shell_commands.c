@@ -174,21 +174,11 @@ extern int _ipv6_nc_manage(int argc, char **argv);
 extern int _ipv6_nc_routers(int argc, char **argv);
 #endif
 
-//#ifdef MODULE_CONFIG
-extern int _uECC_get_set_public_handler(int argc, char **argv);			//TODO: fare #ifdef
-extern int _uECC_get_set_private_handler(int argc, char **argv);
-extern int _uECC_generate_keys(int argc, char **argv);
-extern int _uECC_encrypt(int argc, char **argv);
-extern int _uECC_decrypt(int argc, char **argv);
-
-extern int pbc_start_handler(int argc, char **argv);
-extern int pbc_agree_handler(int argc, char **argv);
-extern int pbc_private_handler(int argc, char **argv);
-
-//sensor authentication
-extern int sa_init_handler(int argc, char **argv);
-extern int sa_server_handler(int argc, char **argv);
-//#endif
+#ifdef MODULE_NG_ZEP
+#ifdef MODULE_NG_IPV6_ADDR
+extern int _zep_init(int argc, char **argv);
+#endif
+#endif
 
 const shell_command_t _shell_command_list[] = {
     {"reboot", "Reboot the node", _reboot_handler},
@@ -303,20 +293,10 @@ const shell_command_t _shell_command_list[] = {
     {"ncache", "manage neighbor cache by hand", _ipv6_nc_manage },
     {"routers", "IPv6 default router list", _ipv6_nc_routers },
 #endif
-//#ifdef MODULE_CONFIG
-    {"public", "get or set the public key used for uECC", _uECC_get_set_public_handler},		//TODO: fare un #ifdef
-    {"private", "get or set the private key used for uECC", _uECC_get_set_private_handler},
-    {"genecc", "generate public/private key for uECC", _uECC_generate_keys},
-    {"encecc", "encryption string with uECC", _uECC_encrypt},
-    {"dececc", "decryption string with uECC", _uECC_decrypt},
-
-    {"pbc_start", "initialize PBC with relic lib", pbc_start_handler},
-    {"pbc_private", "Get or set private key for PBC", pbc_private_handler},
-    {"pbc_agree", "obtain shared key for other node", pbc_agree_handler},
-
-	{"sa_init", "Initialize procedure of sensor authentication", sa_init_handler},
-	{"sa_server", "Send SA_AUTH procedure response GET_ID", sa_server_handler},
-//#endif
-    
+#ifdef MODULE_NG_ZEP
+#ifdef MODULE_NG_IPV6_ADDR
+    {"zep_init", "initializes ZEP (Zigbee Encapsulation Protocol)", _zep_init },
+#endif
+#endif
     {NULL, NULL, NULL}
 };

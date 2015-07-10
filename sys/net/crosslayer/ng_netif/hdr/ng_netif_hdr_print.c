@@ -13,6 +13,7 @@
  */
 
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "net/ng_netif.h"
 #include "net/ng_netif/hdr.h"
@@ -24,14 +25,26 @@ void ng_netif_hdr_print(ng_netif_hdr_t *hdr)
     printf("if_pid: %" PRIkernel_pid "  ", hdr->if_pid);
     printf("rssi: %" PRIu8 "  ", hdr->rssi);
     printf("lqi: %" PRIu8 "\n", hdr->lqi);
-    printf("src_l2addr: %s\n",
-           ng_netif_addr_to_str(addr_str, sizeof(addr_str),
-                                ng_netif_hdr_get_src_addr(hdr),
-                                (size_t)hdr->src_l2addr_len));
-    printf("dst_l2addr: %s\n",
-           ng_netif_addr_to_str(addr_str, sizeof(addr_str),
-                                ng_netif_hdr_get_dst_addr(hdr),
-                                (size_t)hdr->dst_l2addr_len));
+
+    if (hdr->src_l2addr_len > 0) {
+        printf("src_l2addr: %s\n",
+               ng_netif_addr_to_str(addr_str, sizeof(addr_str),
+                                    ng_netif_hdr_get_src_addr(hdr),
+                                    (size_t)hdr->src_l2addr_len));
+    }
+    else {
+        puts("src_l2addr: (nil)");
+    }
+
+    if (hdr->dst_l2addr_len > 0) {
+        printf("dst_l2addr: %s\n",
+               ng_netif_addr_to_str(addr_str, sizeof(addr_str),
+                                    ng_netif_hdr_get_dst_addr(hdr),
+                                    (size_t)hdr->dst_l2addr_len));
+    }
+    else {
+        puts("dst_l2addr: (nil)");
+    }
 }
 
 /** @} */

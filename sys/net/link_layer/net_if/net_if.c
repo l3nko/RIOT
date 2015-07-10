@@ -9,7 +9,7 @@
 /**
  * @ingroup net_if
  * @{
- * @file    net_if.c
+ * @file
  * @author  Martine Lenders <mlenders@inf.fu-berlin.de>
  */
 #include <string.h>
@@ -25,6 +25,11 @@
 
 #define ENABLE_DEBUG    (0)
 #include "debug.h"
+
+#if ENABLE_DEBUG
+/* For PRIu16 etc. */
+#include <inttypes.h>
+#endif
 
 net_if_t interfaces[NET_IF_MAX];
 

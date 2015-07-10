@@ -65,7 +65,7 @@
 
 #define SND_BUFFER_SIZE     (100)
 #define RCV_BUFFER_SIZE     (64)
-#define RADIO_STACK_SIZE    (KERNEL_CONF_STACKSIZE_MAIN)
+#define RADIO_STACK_SIZE    (THREAD_STACKSIZE_MAIN)
 
 #ifdef MODULE_TRANSCEIVER
 
@@ -176,7 +176,7 @@ void init_transceiver(void)
     kernel_pid_t radio_pid = thread_create(
                         radio_stack_buffer,
                         sizeof(radio_stack_buffer),
-                        PRIORITY_MAIN - 2,
+                        THREAD_PRIORITY_MAIN - 2,
                         CREATE_STACKTEST,
                         radio,
                         NULL,
@@ -189,18 +189,6 @@ void init_transceiver(void)
     transceiver_register(transceivers, radio_pid);
 }
 #endif /* MODULE_TRANSCEIVER */
-
-static int shell_readc(void)
-{
-    char c = 0;
-    (void) posix_read(uart0_handler_pid, &c, 1);
-    return c;
-}
-
-static void shell_putchar(int c)
-{
-    (void) putchar(c);
-}
 
 int main(void)
 {    
@@ -221,7 +209,7 @@ int main(void)
 	
     (void) puts("Welcome to RIOT!");
 
-    shell_init(&shell, NULL, UART0_BUFSIZE, shell_readc, shell_putchar);
+    shell_init(&shell, NULL, UART0_BUFSIZE, uart0_readc, uart0_putc);
 
 //    //init uECC
 //	random_init();	//need for uECC

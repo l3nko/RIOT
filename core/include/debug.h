@@ -10,7 +10,7 @@
  * @addtogroup  core_util
  * @{
  *
- * @file        debug.h
+ * @file
  * @brief       Debug-header
  *
  * @details     If *ENABLE_DEBUG* is defined inside an implementation file, all
@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include "sched.h"
+#include "thread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -54,10 +55,10 @@ extern "C" {
  * is not set, this check is not performed. (CPU exception may occur)
  */
 #if DEVELHELP
-#include "cpu-conf.h"
+#include "cpu_conf.h"
 #define DEBUG_PRINT(...) \
     do { \
-        if ((sched_active_thread == NULL) || (sched_active_thread->stack_size > KERNEL_CONF_STACKSIZE_PRINTF)) { \
+        if ((sched_active_thread == NULL) || (sched_active_thread->stack_size > THREAD_EXTRA_STACKSIZE_PRINTF)) { \
             printf(__VA_ARGS__); \
         } \
         else { \
@@ -117,6 +118,17 @@ extern "C" {
 #define DEBUGF(...)
 #endif
 /** @} */
+
+/**
+ * @def DEBUG_EXTRA_STACKSIZE
+ *
+ * @brief Extra stacksize needed when ENABLE_DEBUG==1
+ */
+#if ENABLE_DEBUG
+#define DEBUG_EXTRA_STACKSIZE THREAD_EXTRA_STACKSIZE_PRINTF
+#else
+#define DEBUG_EXTRA_STACKSIZE (0)
+#endif
 
 #ifdef __cplusplus
 }

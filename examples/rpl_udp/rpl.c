@@ -20,6 +20,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
+
 #include "vtimer.h"
 #include "thread.h"
 #include "net_if.h"
@@ -144,7 +146,7 @@ int rpl_udp_init(int argc, char **argv)
         DEBUGF("Start monitor\n");
         kernel_pid_t monitor_pid = thread_create(monitor_stack_buffer,
                                                  sizeof(monitor_stack_buffer),
-                                                 PRIORITY_MAIN - 2,
+                                                 THREAD_PRIORITY_MAIN - 2,
                                                  CREATE_STACKTEST,
                                                  rpl_udp_monitor,
                                                  NULL,
