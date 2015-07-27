@@ -31,7 +31,7 @@ extern "C" {
 #define TRANSCEIVER_BUFFER_SIZE (3)
 
 #ifndef UART0_BUFSIZE
-#define UART0_BUFSIZE                   (32)//(32)
+#define UART0_BUFSIZE                   (16)//(32)
 #endif
 
 #ifndef NG_PKTBUF_SIZE
