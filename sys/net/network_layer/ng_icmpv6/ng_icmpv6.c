@@ -25,6 +25,7 @@
 #include "net/ng_protnum.h"
 #include "net/ng_ipv6/hdr.h"
 #include "net/ng_ndp.h"
+#include "net/ng_rpl.h"
 #include "od.h"
 #include "utlist.h"
 
@@ -115,6 +116,7 @@ void ng_icmpv6_demux(kernel_pid_t iface, ng_pktsnip_t *pkt)
         case NG_ICMPV6_RPL_CTRL:
             DEBUG("icmpv6: RPL control message received\n");
             /* TODO */
+            ng_rpl_handle(iface, hdr, icmpv6->data, icmpv6->size);
             break;
 #endif
 
