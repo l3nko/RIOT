@@ -32,9 +32,7 @@
 
 #define BAUDRATE    (115200ul)
 
-#define BAUD_RATE_MAJOR   (int)(MSP430_INITIAL_CPU_SPEED / BAUDRATE)
-#define BAUD_RATE_MINOR   (int)(((MSP430_INITIAL_CPU_SPEED / BAUDRATE) - BAUD_RATE_MAJOR) * 8)
-
+#define UCA0_BAUD_RATE		(int)(MSP430_INITIAL_CPU_SPEED / BAUDRATE)
 
 void uart_init(void)
 {
@@ -49,9 +47,16 @@ void uart_init(void)
     UCA0MCTL  = UCBRS1 + UCBRS0;   /* low-frequency baud rate generation,
                                       modulation type 4 */
 
-    /* 115200 baud, divided from 8 MHz == 69 */
-    UCA0BR0   = BAUD_RATE_MAJOR;
-    UCA0BR1   = BAUD_RATE_MINOR;
+    /* 115200 baud, divided from 8 MHz == 69 (0x45) */
+//    UCA0BR0 = 0x46; //BAUD_RATE_MAJOR;
+//    UCA0BR1 = 0x00; //BAUD_RATE_MINOR;
+    if( BAUDRATE * UCA0_BAUD_RATE < MSP430_INITIAL_CPU_SPEED ) {
+    	UCA0BR0 = (uint8_t)((UCA0_BAUD_RATE+1) & 0x00FF );
+    }
+    else {
+    	UCA0BR0 = (uint8_t)(UCA0_BAUD_RATE & 0x00FF );
+    }
+    UCA0BR1   =  (uint8_t)((UCA0_BAUD_RATE & 0xFF00) >> 8);
 
     /* remaining registers : set to default */
     UCA0CTL0  = 0x00;   /* put in asynchronous (== UART) mode, LSB first */
