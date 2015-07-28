@@ -20,7 +20,7 @@ extern "C" {
  * This function handles receiving a DIS message.
  *
  */
-void ng_rpl_recv_DIS(ng_rpl_dis_t* dis);
+void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size);
 
 /**
  * @brief Receives a DIO message
@@ -28,7 +28,7 @@ void ng_rpl_recv_DIS(ng_rpl_dis_t* dis);
  * This function handles receiving a DIO message.
  *
  */
-void ng_rpl_recv_DIO(ng_rpl_dio_t* dio);
+void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size);
 
 /**
  * @brief Receives a DAO message
@@ -36,7 +36,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio);
  * This function handles receiving a DAO message.
  *
  */
-void ng_rpl_recv_DAO(ng_rpl_dao_t* dao);
+void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size);
 
 /**
  * @brief Receives a DAO_ACK message
@@ -44,7 +44,7 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao);
  * This function handles receiving a DAO_ACK message.
  *
  */
-void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack);
+void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack, size_t data_size);
 
 #ifdef __cplusplus
 }

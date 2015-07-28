@@ -79,7 +79,8 @@ void ng_rpl_init_root(ng_rpl_options_t *rpl_opts);
  * @param[in] icmpv6        The ICMPv6 data in @p pkt.
  * @param[in] icmpv6_size   The overall size of the message.
  */
-void ng_rpl_handle(kernel_pid_t iface, ng_icmpv6_hdr_t *hdr, uint8_t *data, size_t data_size);
+void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
+					ng_icmpv6_hdr_t *hdr, uint8_t *data, size_t data_size);
 
 #ifdef __cplusplus
 }

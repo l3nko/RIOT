@@ -116,7 +116,7 @@ void ng_icmpv6_demux(kernel_pid_t iface, ng_pktsnip_t *pkt)
         case NG_ICMPV6_RPL_CTRL:
             DEBUG("icmpv6: RPL control message received\n");
             /* TODO */
-            ng_rpl_handle(iface, hdr, icmpv6->data, icmpv6->size);
+            ng_rpl_handle(iface, (ng_ipv6_hdr_t*)ipv6->data, hdr, icmpv6->data, icmpv6->size);
             break;
 #endif
 

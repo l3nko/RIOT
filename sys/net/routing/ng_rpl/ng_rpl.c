@@ -29,35 +29,37 @@
 //#endif
 
 
-void ng_rpl_handle(kernel_pid_t iface, ng_icmpv6_hdr_t *hdr, uint8_t *data, size_t data_size)
+void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
+					ng_icmpv6_hdr_t *hdr, uint8_t *data, size_t data_size)
 {
 	#if ENABLE_DEBUG
 	DEBUG("RPL msg received with code %" PRIu8 "\n", hdr->code);
 	#endif
 
+
 	switch (hdr->code) {
 		case RPL_DIS_CODE: {
 			//(rpl_dis_t *) & (rpl_buffer[IPV6_HDR_LEN + ICMPV6_HDR_LEN]));
 			ng_rpl_dis_t *dis = (ng_rpl_dis_t*) &data[NG_DATA_OFFSET];
-			ng_rpl_recv_DIS(dis);
+			ng_rpl_recv_DIS(dis, data_size);
 			break;
 		}
 
 		case RPL_DIO_CODE: {
 			ng_rpl_dio_t *dio = (ng_rpl_dio_t*) &data[NG_DATA_OFFSET];
-			ng_rpl_recv_DIO(dio);
+			ng_rpl_recv_DIO(dio, data_size, ipv6_hdr);
 			break;
 		}
 
 		case RPL_DAO_CODE: {
 			ng_rpl_dao_t *dao = (ng_rpl_dao_t*) &data[NG_DATA_OFFSET];
-			ng_rpl_recv_DAO(dao);
+			ng_rpl_recv_DAO(dao, data_size);
 			break;
 		}
 
 		case RPL_DAO_ACK_CODE: {
 			ng_rpl_dao_ack_t *dao_ack = (ng_rpl_dao_ack_t*) &data[NG_DATA_OFFSET];
-			ng_rpl_recv_DAO_ACK(dao_ack);
+			ng_rpl_recv_DAO_ACK(dao_ack, data_size);
 			break;
 		}
 

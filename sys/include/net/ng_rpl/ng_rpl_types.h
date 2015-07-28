@@ -107,7 +107,7 @@ typedef struct __attribute__((packed)) {
     uint8_t VID_Flags;
     ng_ipv6_addr_t dodagid;
     uint8_t version;
-} rpl_opt_solicited_t;
+} ng_rpl_opt_solicited_t;
 
 /* RPL Target-Option (RFC 6550 Fig. 25) */
 /* TODO: ipv6_addr_t target may be replaced by a target prefix of variable length */
