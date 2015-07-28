@@ -36,6 +36,11 @@ ifneq (,$(filter rpl,$(USEMODULE)))
   USEMODULE += routing
 endif
 
+ifneq (,$(filter ng_rpl,$(USEMODULE)))
+  USEMODULE += trickle
+#  USEMODULE += routing
+endif
+
 ifneq (,$(filter routing,$(USEMODULE)))
   USEMODULE += sixlowpan
 endif

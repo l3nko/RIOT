@@ -7,7 +7,16 @@
 
 #include "ng_rpl_control_messages.h"
 #include "ng_rpl_dodag.h"
+#include "ng_rpl_of_manager.h"
 #include "net/ng_rpl.h"
+
+#define ENABLE_DEBUG    (0)
+#include "debug.h"
+
+#if ENABLE_DEBUG
+/* For PRIu16 etc. */
+#include <inttypes.h>
+#endif
 
 void ng_rpl_init_root(ng_rpl_options_t *rpl_opts)
 {
@@ -27,7 +36,7 @@ void ng_rpl_init_root(ng_rpl_options_t *rpl_opts)
     ng_rpl_dodag_t *dodag;
 
 	if (dodag != NULL) {
-		dodag->of = (struct rpl_of_t *) rpl_get_of_for_ocp(RPL_DEFAULT_OCP);
+		dodag->of = (struct ng_rpl_of_t *) ng_rpl_get_of_for_ocp(0);//(RPL_DEFAULT_OCP);
 		dodag->instance = inst;
 //		dodag->mop = RPL_DEFAULT_MOP;
 		dodag->dtsn = 1;
@@ -375,7 +384,7 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao)
 	DEBUG("instance %04X ", dao->rpl_instanceid);
 	DEBUG("sequence %04X\n", dao->dao_sequence);
 
-	ng_rpl_dodag_t *dodag = rpl_get_joined_dodag(dao->rpl_instanceid);
+	ng_rpl_dodag_t *dodag = ng_rpl_get_joined_dodag(dao->rpl_instanceid);
 
 	if (dodag == NULL) {
 		DEBUG("[Error] got DAO although not a DODAG\n");
@@ -390,7 +399,7 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao)
 
 void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack)
 {
-	ng_rpl_dodag_t *dodag = rpl_get_joined_dodag(dao_ack->rpl_instanceid);
+	ng_rpl_dodag_t *dodag = ng_rpl_get_joined_dodag(dao_ack->rpl_instanceid);
 
 	if (dodag == NULL) {
 		return;
@@ -405,6 +414,6 @@ void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack)
 	}
 
 	dodag->ack_received = true;
-	long_delay_dao(dodag);
+	//TODO: long_delay_dao(dodag);
 }
 

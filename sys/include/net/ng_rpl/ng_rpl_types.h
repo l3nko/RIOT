@@ -149,14 +149,14 @@ typedef struct __attribute__((packed)) {
 struct rpl_dodag_t;
 
 typedef struct {
-	ng_ipv6_addr_t         addr;
-    uint16_t            rank;
-    uint8_t             dtsn;
-    struct rpl_dodag_t *dodag;
-    uint16_t            lifetime;
-    double              link_metric;
-    uint8_t             link_metric_type;
-    uint8_t             used;
+	ng_ipv6_addr_t         	addr;
+    uint16_t            	rank;
+    uint8_t             	dtsn;
+    struct ng_rpl_dodag_t*	dodag;
+    uint16_t            	lifetime;
+    double              	link_metric;
+    uint8_t             	link_metric_type;
+    uint8_t             	used;
 } ng_rpl_parent_t;
 
 struct ng_rpl_of_t;

@@ -7,12 +7,17 @@
 
 #include "ng_rpl_dodag.h"
 
-ng_rpl_instance_t* rpl_new_instance(uint8_t instanceid)
+ng_rpl_instance_t* ng_rpl_new_instance(uint8_t instanceid)
 {
 	return NULL;
 }
 
-ng_rpl_instance_t* rpl_get_instance(uint8_t instanceid)
+ng_rpl_instance_t* ng_rpl_get_instance(uint8_t instanceid)
+{
+	return NULL;
+}
+
+ng_rpl_dodag_t* ng_rpl_get_joined_dodag(uint8_t instanceid)
 {
 	return NULL;
 }
