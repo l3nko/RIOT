@@ -52,6 +52,17 @@ ng_rpl_instance_t* ng_rpl_get_instance(uint8_t instanceid)
 	return NULL;
 }
 
+ng_rpl_instance_t* ng_rpl_get_my_instance(void)
+{
+    for (int i = 0; i < RPL_MAX_INSTANCES; i++) {
+        if (instances[i].joined) {
+            return &instances[i];
+        }
+    }
+
+    return NULL;
+}
+
 ng_rpl_dodag_t* ng_rpl_get_joined_dodag(uint8_t instanceid)
 {
 	for (int i = 0; i < RPL_MAX_DODAGS; i++) {
@@ -169,6 +180,17 @@ ng_rpl_dodag_t* ng_rpl_new_dodag(ng_rpl_instance_t *inst, ng_ipv6_addr_t *dodagi
             dodag->trickle.callback.args = dodag;
             memcpy(&dodag->dodag_id, dodagid, sizeof(*dodagid));
             return dodag;
+        }
+    }
+
+    return NULL;
+}
+
+ng_rpl_dodag_t* ng_rpl_get_my_dodag(void)
+{
+    for (int i = 0; i < RPL_MAX_DODAGS; i++) {
+        if (rpl_dodags[i].joined) {
+            return &rpl_dodags[i];
         }
     }
 
@@ -293,6 +315,17 @@ ng_rpl_parent_t* ng_rpl_find_parent(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *addre
     return NULL;
 }
 
+ng_ipv6_addr_t* ng_rpl_get_my_preferred_parent(void)
+{
+    ng_rpl_dodag_t* my_dodag = ng_rpl_get_my_dodag();
+
+    if (my_dodag == NULL) {
+        return NULL;
+    }
+
+    return &my_dodag->my_preferred_parent->addr;
+}
+
 void ng_rpl_delete_all_parents(ng_rpl_dodag_t *dodag)
 {
     dodag->my_preferred_parent = NULL;
@@ -360,7 +393,7 @@ ng_rpl_parent_t* ng_rpl_find_preferred_parent(ng_rpl_dodag_t *my_dodag)
     return best;
 }
 
-static uint16_t ng_rpl_calc_rank(uint16_t abs_rank, uint16_t minhoprankincrease)
+uint16_t ng_rpl_calc_rank(uint16_t abs_rank, uint16_t minhoprankincrease)
 {
     return abs_rank / minhoprankincrease;
 }
