@@ -189,8 +189,8 @@ ng_rpl_dodag_t* ng_rpl_new_dodag(ng_rpl_instance_t *inst, ng_ipv6_addr_t *dodagi
 ng_rpl_dodag_t* ng_rpl_get_my_dodag(void)
 {
     for (int i = 0; i < RPL_MAX_DODAGS; i++) {
-        if (rpl_dodags[i].joined) {
-            return &rpl_dodags[i];
+        if (dodags[i].joined) {
+            return &dodags[i];
         }
     }
 

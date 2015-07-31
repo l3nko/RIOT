@@ -17,6 +17,7 @@
 #if ENABLE_DEBUG
 /* For PRIu16 etc. */
 #include <inttypes.h>
+static char addr_str[IPV6_MAX_ADDR_STR_LEN];
 #endif
 
 static inline uint8_t NG_RPL_COUNTER_INCREMENT(uint8_t counter)
@@ -38,6 +39,14 @@ static inline bool NG_RPL_COUNTER_GREATER_THAN(uint8_t A, uint8_t B)
 {
     return ((A > RPL_COUNTER_LOWER_REGION) ? ((B > RPL_COUNTER_LOWER_REGION) ? NG_RPL_COUNTER_GREATER_THAN_LOCAL(A, B) : 0) : ((B > RPL_COUNTER_LOWER_REGION) ? 1 : NG_RPL_COUNTER_GREATER_THAN_LOCAL(A, B)));
 }
+
+/********* static functions *********/
+void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
+                  uint8_t start_index);
+void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination);
+void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination);
+void rpl_send_DIS(ng_ipv6_addr_t *destination);
+/************************************/
 
 void ng_rpl_init_root(ng_rpl_options_t *rpl_opts)
 {
@@ -124,7 +133,7 @@ static ng_rpl_opt_transit_t* get_rpl_opt_transit_from_buf(uint8_t* buffer, uint1
 }
 /* end static functions */
 
-void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size)
+void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size, ng_ipv6_hdr_t* ipv6_hdr)
 {
 	uint16_t len = DIS_BASE_LEN;
 	ng_rpl_dodag_t *dodag, *end;
@@ -176,8 +185,7 @@ void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size)
 							}
 						}
 
-						//TODO: send_DIO
-						//rpl_send_DIO(dodag, &ipv6_buf->srcaddr);
+						ng_rpl_send_DIO(dodag, &ipv6_hdr->src);
 						trickle_reset_timer(&dodag->trickle);
 					}
 				}
@@ -193,8 +201,7 @@ void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size)
 	if (options_missing) {
 		for (dodag = ng_rpl_get_dodags(), end = dodag + RPL_MAX_DODAGS; dodag < end; dodag++) {
 			if (dodag->joined) {
-				//TODO: send_DIO
-				//rpl_send_DIO(dodag, &ipv6_buf->srcaddr);
+				ng_rpl_send_DIO(dodag, &ipv6_hdr->src);
 				trickle_reset_timer(&dodag->trickle);
 			}
 		}
@@ -335,8 +342,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hd
 	if (my_dodag == NULL) {
 		if (!has_dodag_conf_opt) {
 			DEBUGF("send DIS\n");
-			//TODO: rpl send DIS
-			//rpl_send_DIS(&ipv6_buf->srcaddr);
+			rpl_send_DIS(&ipv6_hdr->src);
 		}
 
 		if (byteorder_ntohs(dio->rank) < ROOT_RANK) {
@@ -556,4 +562,58 @@ void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack, size_t data_size)
 	dodag->ack_received = true;
 	//TODO: long_delay_dao(dodag);
 }
+
+/* obligatory for each mode. normally not modified */
+//void rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_t next_header)
+//{
+//    uint8_t *p_ptr;
+////    ipv6_send_buf = get_rpl_send_ipv6_buf();
+////    p_ptr = get_rpl_send_payload_buf(ipv6_ext_hdr_len);
+//
+//    ipv6_send_buf->version_trafficclass = IPV6_VER;
+//    ipv6_send_buf->trafficclass_flowlabel = 0;
+//    ipv6_send_buf->flowlabel = 0;
+//    ipv6_send_buf->nextheader = next_header;
+//    ipv6_send_buf->hoplimit = MULTIHOP_HOPLIMIT;
+//    ipv6_send_buf->length = HTONS(p_len);
+//
+//    memcpy(&(ipv6_send_buf->destaddr), destination, 16);
+//    ipv6_net_if_get_best_src_addr(&(ipv6_send_buf->srcaddr), &(ipv6_send_buf->destaddr));
+//
+//    icmp_send_buf = get_rpl_send_icmpv6_buf(ipv6_ext_hdr_len);
+//    icmp_send_buf->checksum = icmpv6_csum(ipv6_send_buf, icmp_send_buf);
+//
+//    /* The packet was "assembled" in rpl_%mode%.c. Therefore rpl_send_buf was used.
+//     * Therefore memcpy is not needed because the payload is at the
+//     * right memory location already. */
+//
+//    if (p_ptr != payload) {
+//        memcpy(p_ptr, payload, p_len);
+//    }
+//
+//    ipv6_send_packet(ipv6_send_buf, NULL);
+//}
+
+/* implementation of static functions */
+void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
+                  uint8_t start_index)
+{
+
+}
+
+void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination)
+{
+
+}
+
+void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination)
+{
+
+}
+
+void rpl_send_DIS(ng_ipv6_addr_t *destination)
+{
+
+}
+
 

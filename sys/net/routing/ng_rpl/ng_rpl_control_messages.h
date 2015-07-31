@@ -20,7 +20,7 @@ extern "C" {
  * This function handles receiving a DIS message.
  *
  */
-void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size);
+void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size, ng_ipv6_hdr_t* ipv6_hdr);
 
 /**
  * @brief Receives a DIO message
