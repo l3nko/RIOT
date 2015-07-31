@@ -9,6 +9,7 @@
 #include "net/ng_rpl.h"
 #include "net/ng_rpl/ng_rpl_types.h"
 #include "ng_rpl_control_messages.h"
+#include "net/ng_rpl/ng_rpl_config.h"
 
 #define ENABLE_DEBUG    (1)
 #include "debug.h"
@@ -28,6 +29,9 @@
 //static char _stack[NG_RPL_STACK_SIZE];
 //#endif
 
+#if RPL_MAX_ROUTING_ENTRIES != 0
+static ng_rpl_routing_entry_t rpl_routing_table[RPL_MAX_ROUTING_ENTRIES];
+#endif
 
 void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
 					ng_icmpv6_hdr_t *hdr, uint8_t *data, size_t data_size)
@@ -35,7 +39,6 @@ void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
 	#if ENABLE_DEBUG
 	DEBUG("RPL msg received with code %" PRIu8 "\n", hdr->code);
 	#endif
-
 
 	switch (hdr->code) {
 		case RPL_DIS_CODE: {
@@ -53,7 +56,7 @@ void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
 
 		case RPL_DAO_CODE: {
 			ng_rpl_dao_t *dao = (ng_rpl_dao_t*) &data[NG_DATA_OFFSET];
-			ng_rpl_recv_DAO(dao, data_size);
+			ng_rpl_recv_DAO(dao, data_size, ipv6_hdr);
 			break;
 		}
 
@@ -67,6 +70,15 @@ void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
 			DEBUG("RPL: unknown code field %" PRIu8 "\n", hdr->code);
 			break;
 	}
+}
 
+void ng_rpl_add_routing_entry(ng_ipv6_addr_t *addr, ng_ipv6_addr_t *next_hop, uint16_t lifetime)
+{
+	//TODO: only dummy implementation
+	ng_rpl_routing_entry_t new_entry;
+	new_entry.address = *addr;
+	new_entry.next_hop = *next_hop;
+	new_entry.lifetime = lifetime;
+	rpl_routing_table[0] = new_entry;
 
 }

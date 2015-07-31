@@ -91,10 +91,10 @@ extern "C" {
 #define RPL_DODAG_ID_LEN 128
 
 /* others */
-#define NUMBER_IMPLEMENTED_OFS 2
-#define RPL_MAX_DODAGS 3
+#define NUMBER_IMPLEMENTED_OFS 1//2
+#define RPL_MAX_DODAGS 1//3
 #define RPL_MAX_INSTANCES 1
-#define RPL_MAX_PARENTS 5
+#define RPL_MAX_PARENTS 3//5
 #ifndef RPL_MAX_ROUTING_ENTRIES
     #if (NG_RPL_DEFAULT_MOP == NG_RPL_MOP_NO_DOWNWARD_ROUTES)
     	#define NG_RPL_MAX_ROUTING_ENTRIES (128)
@@ -105,7 +105,7 @@ extern "C" {
         	#define RPL_MAX_ROUTING_ENTRIES (0)
         #endif
     #elif (NG_RPL_DEFAULT_MOP == NG_RPL_MOP_STORING_MODE_NO_MC)
-    	#define RPL_MAX_ROUTING_ENTRIES (128)
+    	#define RPL_MAX_ROUTING_ENTRIES (16)//(128)
     #else // NG_RPL_DEFAULT_MOP == NG_RPL_MOP_STORING_MODE_MC
     	#define RPL_MAX_ROUTING_ENTRIES (128)
     #endif

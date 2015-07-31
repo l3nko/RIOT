@@ -28,7 +28,7 @@ void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size);
  * This function handles receiving a DIO message.
  *
  */
-void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size);
+void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hdr);
 
 /**
  * @brief Receives a DAO message
@@ -36,7 +36,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size);
  * This function handles receiving a DAO message.
  *
  */
-void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size);
+void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size, ng_ipv6_hdr_t* ipv6_hdr);
 
 /**
  * @brief Receives a DAO_ACK message

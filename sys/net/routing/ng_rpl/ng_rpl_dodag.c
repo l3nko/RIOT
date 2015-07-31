@@ -21,8 +21,7 @@ static ng_rpl_parent_t parents[RPL_MAX_PARENTS];
 
 ng_rpl_dodag_t* ng_rpl_get_dodags(void)
 {
-	//return &dodags[0];
-	return &dodags;
+	return &dodags[0];
 }
 
 ng_rpl_instance_t* ng_rpl_new_instance(uint8_t instanceid)
@@ -67,9 +66,9 @@ ng_rpl_dodag_t* ng_rpl_get_joined_dodag(uint8_t instanceid)
 bool ng_rpl_equal_id(ng_ipv6_addr_t *id1, ng_ipv6_addr_t *id2)
 {
     for (uint8_t i = 0; i < 2; i++) {
-        DEBUGF("ID1: %d ID2: %d\n", id1->uint8[12 + i], id2->uint8[12 + i]);
+        DEBUGF("ID1: %d ID2: %d\n", id1->u8[12 + i], id2->u8[12 + i]);
 
-        if (id1->uint8[14 + i] != id2->uint8[14 + i]) {
+        if (id1->u8[14 + i] != id2->u8[14 + i]) {
             return false;
         }
     }
@@ -108,10 +107,10 @@ void ng_rpl_join_dodag(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *parent, uint16_t p
     my_dodag->prefix_flags = dodag->prefix_flags;
     my_dodag->joined = 1;
 
-    preferred_parent = rpl_new_parent(my_dodag, parent, parent_rank);
+    preferred_parent = ng_rpl_new_parent(my_dodag, parent, parent_rank);
 
     if (preferred_parent == NULL) {
-        rpl_del_dodag(my_dodag);
+        ng_rpl_del_dodag(my_dodag);
         return;
     }
 
@@ -139,6 +138,56 @@ void ng_rpl_join_dodag(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *parent, uint16_t p
 //                  RPL_MSG_TYPE_TRICKLE_CALLBACK, (1 << my_dodag->dio_min), my_dodag->dio_interval_doubling,
 //                  my_dodag->dio_redundancy);
 //    rpl_delay_dao(my_dodag);
+}
+static void ng_rpl_trickle_send_dio(void *args)
+{
+//    ng_ipv6_addr_t mcast;
+
+    //TODO:
+//    ipv6_addr_set_all_rpl_nodes_addr(&mcast);
+//    rpl_send_DIO((ng_rpl_dodag_t *) args, &mcast);
+}
+
+ng_rpl_dodag_t* ng_rpl_new_dodag(ng_rpl_instance_t *inst, ng_ipv6_addr_t *dodagid)
+{
+    if (inst == NULL) {
+        DEBUGF("Error - No instance specified\n");
+        return NULL;
+    }
+    ng_rpl_dodag_t *dodag;
+    ng_rpl_dodag_t *end;
+
+    for (dodag = &dodags[0], end = dodag + RPL_MAX_DODAGS; dodag < end; dodag++) {
+        if (dodag->used == 0) {
+            memset(dodag, 0, sizeof(*dodag));
+            dodag->instance = inst;
+            dodag->my_rank = INFINITE_RANK;
+            dodag->used = 1;
+            dodag->ack_received = true;
+            dodag->dao_counter = 0;
+            dodag->trickle.callback.func = &ng_rpl_trickle_send_dio;
+            dodag->trickle.callback.args = dodag;
+            memcpy(&dodag->dodag_id, dodagid, sizeof(*dodagid));
+            return dodag;
+        }
+    }
+
+    return NULL;
+}
+
+void ng_rpl_del_dodag(ng_rpl_dodag_t *dodag)
+{
+    ng_rpl_leave_dodag(dodag);
+    memset(dodag, 0, sizeof(*dodag));
+}
+
+void ng_rpl_leave_dodag(ng_rpl_dodag_t *dodag)
+{
+    dodag->joined = 0;
+    dodag->my_preferred_parent = NULL;
+    ng_rpl_delete_all_parents(dodag);
+    trickle_stop(&dodag->trickle);
+    vtimer_remove(&dodag->dao_timer);
 }
 
 void ng_rpl_global_repair(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *p_addr, uint16_t rank)
@@ -219,7 +268,7 @@ void ng_rpl_delete_worst_parent(void)
 
 }
 
-void rpl_delete_parent(ng_rpl_parent_t* parent)
+void ng_rpl_delete_parent(ng_rpl_parent_t* parent)
 {
     if (parent == parent->dodag->my_preferred_parent) {
         parent->dodag->my_preferred_parent = NULL;
@@ -233,15 +282,87 @@ ng_rpl_parent_t* ng_rpl_find_parent(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *addre
     ng_rpl_parent_t *end;
 
     for (parent = &parents[0], end = parents + RPL_MAX_PARENTS; parent < end; parent++) {
-        if ((parent->used) && (rpl_equal_id(address, &parent->addr)
+        if ((parent->used) && (ng_rpl_equal_id(address, &parent->addr)
                     && (parent->dodag->instance->id == dodag->instance->id)
                     && (!memcmp(&parent->dodag->dodag_id,
-                        &dodag->dodag_id, sizeof(ipv6_addr_t))))) {
+                        &dodag->dodag_id, sizeof(ng_ipv6_addr_t))))) {
             return parent;
         }
     }
 
     return NULL;
+}
+
+void ng_rpl_delete_all_parents(ng_rpl_dodag_t *dodag)
+{
+    dodag->my_preferred_parent = NULL;
+    for (int i = 0; i < RPL_MAX_PARENTS; i++) {
+        if (parents[i].dodag && (dodag->instance->id == parents[i].dodag->instance->id) &&
+                (!memcmp(&dodag->dodag_id, &parents[i].dodag->dodag_id, sizeof(ng_ipv6_addr_t)))) {
+             memset(&parents[i], 0, sizeof(parents[i]));
+        }
+    }
+}
+
+ng_rpl_parent_t* ng_rpl_find_preferred_parent(ng_rpl_dodag_t *my_dodag)
+{
+    ng_rpl_parent_t *best = NULL;
+
+    if (my_dodag == NULL) {
+        DEBUG("Not part of a dodag\n");
+        return NULL;
+    }
+
+    for (uint8_t i = 0; i < RPL_MAX_PARENTS; i++) {
+        if (parents[i].used
+                && (parents[i].dodag->instance->id == my_dodag->instance->id)
+                && (!memcmp(&parents[i].dodag->dodag_id,
+                    &my_dodag->dodag_id, sizeof(ng_ipv6_addr_t)))) {
+            if ((parents[i].rank == INFINITE_RANK) || (parents[i].lifetime <= 1)) {
+                DEBUG("Infinite rank, bad parent\n");
+                continue;
+            }
+            else if (best == NULL) {
+                DEBUG("possible parent\n");
+                best = &parents[i];
+            }
+            else {
+                best = my_dodag->of->which_parent(best, &parents[i]);
+            }
+        }
+    }
+
+    if (best == NULL) {
+        return NULL;
+    }
+
+    if (my_dodag->my_preferred_parent == NULL) {
+        my_dodag->my_preferred_parent = best;
+    }
+
+    if (!ng_rpl_equal_id(&my_dodag->my_preferred_parent->addr, &best->addr)) {
+        if (my_dodag->mop != NG_RPL_MOP_NO_DOWNWARD_ROUTES) {
+            /* send DAO with ZERO_LIFETIME to old parent */
+        	//TODO
+//        	rpl_send_DAO(my_dodag, &my_dodag->my_preferred_parent->addr, 0, false, 0);
+        }
+
+        my_dodag->my_preferred_parent = best;
+
+        if (my_dodag->mop != NG_RPL_MOP_NO_DOWNWARD_ROUTES) {
+        	//TODO
+//            rpl_delay_dao(my_dodag);
+        }
+
+        trickle_reset_timer(&my_dodag->trickle);
+    }
+
+    return best;
+}
+
+static uint16_t ng_rpl_calc_rank(uint16_t abs_rank, uint16_t minhoprankincrease)
+{
+    return abs_rank / minhoprankincrease;
 }
 
 void ng_rpl_parent_update(ng_rpl_dodag_t *my_dodag, ng_rpl_parent_t *parent)
@@ -272,4 +393,20 @@ void ng_rpl_parent_update(ng_rpl_dodag_t *my_dodag, ng_rpl_parent_t *parent)
 
         trickle_reset_timer(&my_dodag->trickle);
     }
+}
+
+void ng_rpl_local_repair(ng_rpl_dodag_t *my_dodag)
+{
+    DEBUGF("[INFO] Local Repair started\n");
+
+    if (my_dodag == NULL) {
+        DEBUGF("[Error] - no local repair possible, if not part of a DODAG\n");
+        return;
+    }
+
+    my_dodag->my_rank = INFINITE_RANK;
+    my_dodag->dtsn++;
+    ng_rpl_delete_all_parents(my_dodag);
+    trickle_reset_timer(&my_dodag->trickle);
+
 }

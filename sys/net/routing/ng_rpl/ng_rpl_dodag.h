@@ -15,42 +15,33 @@
 extern "C" {
 #endif
 
-//static inline uint8_t NG_RPL_COUNTER_INCREMENT(uint8_t counter)
-//{
-//    return (counter > RPL_COUNTER_LOWER_REGION ? (counter == RPL_COUNTER_MAX ? counter = 0 : ++counter) : (counter == RPL_COUNTER_LOWER_REGION ? counter = 0 : ++counter));
-//}
-//
-//static inline bool NG_RPL_COUNTER_IS_INIT(uint8_t counter)
-//{
-//    return (counter > RPL_COUNTER_LOWER_REGION);
-//}
-//
-//static inline bool NG_RPL_COUNTER_GREATER_THAN_LOCAL(uint8_t A, uint8_t B)
-//{
-//    return (((A < B) && (RPL_COUNTER_LOWER_REGION + 1 - B + A < RPL_COUNTER_SEQ_WINDOW)) || ((A > B) && (A - B < RPL_COUNTER_SEQ_WINDOW)));
-//}
-//
-//static inline bool NG_RPL_COUNTER_GREATER_THAN(uint8_t A, uint8_t B)
-//{
-//    return ((A > RPL_COUNTER_LOWER_REGION) ? ((B > RPL_COUNTER_LOWER_REGION) ? NG_RPL_COUNTER_GREATER_THAN_LOCAL(A, B) : 0) : ((B > RPL_COUNTER_LOWER_REGION) ? 1 : NG_RPL_COUNTER_GREATER_THAN_LOCAL(A, B)));
-//}
-
-//spstituisce extern rpl_dodag[]
+//spstituisce extern rpl_dodags[]
 ng_rpl_dodag_t* ng_rpl_get_dodags(void);
 
+/* rpl instances */
 ng_rpl_instance_t* ng_rpl_new_instance(uint8_t instanceid);
 ng_rpl_instance_t* ng_rpl_get_instance(uint8_t instanceid);
 ng_rpl_dodag_t* ng_rpl_get_joined_dodag(uint8_t instanceid);
 
-bool ng_rpl_equal_id(ng_ipv6_addr_t *id1, ng_ipv6_addr_t *id2);
-
-void ng_rpl_join_dodag(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *parent, uint16_t parent_rank)
+/* dodag */
+void ng_rpl_join_dodag(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *parent, uint16_t parent_rank);
+ng_rpl_dodag_t* ng_rpl_new_dodag(ng_rpl_instance_t *inst, ng_ipv6_addr_t *dodagid);
+void ng_rpl_del_dodag(ng_rpl_dodag_t *dodag);
+void ng_rpl_leave_dodag(ng_rpl_dodag_t *dodag);
 void ng_rpl_global_repair(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *p_addr, uint16_t rank);
+void ng_rpl_local_repair(ng_rpl_dodag_t *my_dodag);
 
+/* parent */
 ng_rpl_parent_t* ng_rpl_find_parent(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *address);
 ng_rpl_parent_t* ng_rpl_new_parent(ng_rpl_dodag_t *dodag, ng_ipv6_addr_t *address, uint16_t rank);
-void rpl_delete_parent(ng_rpl_parent_t* parent);
+void ng_rpl_delete_parent(ng_rpl_parent_t* parent);
+void ng_rpl_delete_all_parents(ng_rpl_dodag_t *dodag);
 void ng_rpl_delete_worst_parent(void);
+ng_rpl_parent_t* ng_rpl_find_preferred_parent(ng_rpl_dodag_t *my_dodag);
+void ng_rpl_parent_update(ng_rpl_dodag_t *my_dodag, ng_rpl_parent_t *parent);
+
+/* utils */
+bool ng_rpl_equal_id(ng_ipv6_addr_t *id1, ng_ipv6_addr_t *id2);
 
 #ifdef __cplusplus
 }

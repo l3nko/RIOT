@@ -19,6 +19,26 @@
 #include <inttypes.h>
 #endif
 
+static inline uint8_t NG_RPL_COUNTER_INCREMENT(uint8_t counter)
+{
+    return (counter > RPL_COUNTER_LOWER_REGION ? (counter == RPL_COUNTER_MAX ? counter = 0 : ++counter) : (counter == RPL_COUNTER_LOWER_REGION ? counter = 0 : ++counter));
+}
+
+static inline bool NG_RPL_COUNTER_IS_INIT(uint8_t counter)
+{
+    return (counter > RPL_COUNTER_LOWER_REGION);
+}
+
+static inline bool NG_RPL_COUNTER_GREATER_THAN_LOCAL(uint8_t A, uint8_t B)
+{
+    return (((A < B) && (RPL_COUNTER_LOWER_REGION + 1 - B + A < RPL_COUNTER_SEQ_WINDOW)) || ((A > B) && (A - B < RPL_COUNTER_SEQ_WINDOW)));
+}
+
+static inline bool NG_RPL_COUNTER_GREATER_THAN(uint8_t A, uint8_t B)
+{
+    return ((A > RPL_COUNTER_LOWER_REGION) ? ((B > RPL_COUNTER_LOWER_REGION) ? NG_RPL_COUNTER_GREATER_THAN_LOCAL(A, B) : 0) : ((B > RPL_COUNTER_LOWER_REGION) ? 1 : NG_RPL_COUNTER_GREATER_THAN_LOCAL(A, B)));
+}
+
 void ng_rpl_init_root(ng_rpl_options_t *rpl_opts)
 {
 #if (RPL_DEFAULT_MOP == RPL_MOP_NON_STORING_MODE)
@@ -78,10 +98,31 @@ void ng_rpl_init_root(ng_rpl_options_t *rpl_opts)
 }
 
 /* static functions to extract meta data */
-static uint8_t* get_rpl_opt_from_buf(uint8_t* buffer, uint16_t len)
+static ng_rpl_opt_t* get_rpl_opt_from_buf(uint8_t* buffer, uint16_t offset)
 {
-	return ((uint8_t*) &(buffer[IPV6_HDR_LEN + ICMPV6_HDR_LEN + len]) );
+	return ((ng_rpl_opt_t*) &(buffer[ICMPV6_HDR_LEN + offset]) );
 }
+static ng_rpl_opt_solicited_t* get_rpl_opt_solicited_from_buf(uint8_t* buffer, uint16_t offset)
+{
+	return ((ng_rpl_opt_solicited_t*) &(buffer[ICMPV6_HDR_LEN + offset]) );
+}
+static ng_rpl_opt_dodag_conf_t* get_rpl_opt_dodag_conf_from_buf(uint8_t* buffer, uint16_t offset)
+{
+	return ((ng_rpl_opt_dodag_conf_t*) &(buffer[ICMPV6_HDR_LEN + offset]) );
+}
+static ng_rpl_opt_prefix_information_t* get_rpl_opt_prefix_inf_from_buf(uint8_t* buffer, uint16_t offset)
+{
+	return ((ng_rpl_opt_prefix_information_t*) &(buffer[ICMPV6_HDR_LEN + offset]) );
+}
+static ng_rpl_opt_target_t* get_rpl_opt_target_from_buf(uint8_t* buffer, uint16_t offset)
+{
+	return ((ng_rpl_opt_target_t*) &(buffer[ICMPV6_HDR_LEN + offset]) );
+}
+static ng_rpl_opt_transit_t* get_rpl_opt_transit_from_buf(uint8_t* buffer, uint16_t offset)
+{
+	return ((ng_rpl_opt_transit_t*) &(buffer[ICMPV6_HDR_LEN + offset]) );
+}
+/* end static functions */
 
 void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size)
 {
@@ -91,7 +132,7 @@ void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size)
 	ng_rpl_opt_t *dis_opt = NULL;
 
 	while (len < data_size - ICMPV6_HDR_LEN) {
-		dis_opt = (ng_rpl_opt_t*)get_rpl_opt_from_buf(dis, len);
+		dis_opt = get_rpl_opt_from_buf((uint8_t*)dis, len);
 
 		switch (dis_opt->type) {
 			case (RPL_OPT_PAD1): {
@@ -114,7 +155,7 @@ void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size)
 					return;
 				}
 
-				ng_rpl_opt_solicited_t* opt_solicited = (ng_rpl_opt_solicited_t*)get_rpl_opt_from_buf(dis, len);
+				ng_rpl_opt_solicited_t* opt_solicited = get_rpl_opt_solicited_from_buf((uint8_t*)dis, len);
 				for (dodag = ng_rpl_get_dodags(), end = dodag + RPL_MAX_DODAGS; dodag < end; dodag++) {
 					if (dodag->joined) {
 						if (opt_solicited->VID_Flags & RPL_DIS_I_MASK) {
@@ -124,7 +165,7 @@ void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size)
 						}
 
 						if (opt_solicited->VID_Flags & RPL_DIS_D_MASK) {
-							if (!rpl_equal_id(&dodag->dodag_id, &opt_solicited->dodagid)) {
+							if (!ng_rpl_equal_id(&dodag->dodag_id, &opt_solicited->dodagid)) {
 								continue;
 							}
 						}
@@ -194,7 +235,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hd
 	/* Parse until all options are consumed.  */
 	while (len < data_size - ICMPV6_HDR_LEN) {
 		//DEBUGF("parsing DIO options\n");
-		dio_opt = (ng_rpl_opt_t*)get_rpl_opt_from_buf(dio, len);
+		dio_opt = get_rpl_opt_from_buf((uint8_t*)dio, len);
 
 		switch (dio_opt->type) {
 
@@ -227,7 +268,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hd
 					return;
 				}
 
-				ng_rpl_opt_dodag_conf_t* opt_dodag_conf = (ng_rpl_opt_dodag_conf_t*)get_rpl_opt_from_buf(dio, len);
+				ng_rpl_opt_dodag_conf_t* opt_dodag_conf = get_rpl_opt_dodag_conf_from_buf((uint8_t*)dio, len);
 				dio_dodag.dio_interval_doubling = opt_dodag_conf->DIOIntDoubl;
 				dio_dodag.dio_min = opt_dodag_conf->DIOIntMin;
 				dio_dodag.dio_redundancy = opt_dodag_conf->DIORedun;
@@ -252,20 +293,21 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hd
 					return;
 				}
 
-				ng_rpl_opt_prefix_information_t* opt_prefix_info = (ng_rpl_opt_prefix_information_t*)get_rpl_opt_from_buf(dio, len);
+				ng_rpl_opt_prefix_information_t* opt_prefix_info = get_rpl_opt_prefix_inf_from_buf((uint8_t*)dio, len);
 				/* autonomous address-configuration flag */
 				if (opt_prefix_info->flags & (1 << 6)) {
-					ipv6_addr_t tmp;
+					ng_ipv6_addr_t tmp;
 					tmp = opt_prefix_info->prefix;
-					if (!ipv6_addr_is_link_local(&tmp)) {
+					if (!ng_ipv6_addr_is_link_local(&tmp)) {
 						if (byteorder_ntohl(opt_prefix_info->preferred_lifetime)
 								<= byteorder_ntohl(opt_prefix_info->valid_lifetime)) {
-							ipv6_addr_set_by_eui64(&tmp, rpl_if_id, &tmp);
-							ipv6_net_if_add_addr(rpl_if_id, &tmp,
-									NDP_ADDR_STATE_PREFERRED,
-									byteorder_ntohl(opt_prefix_info->valid_lifetime),
-									byteorder_ntohl(opt_prefix_info->preferred_lifetime),
-									0);
+							//TODO: cercare funzioni ng_ipv6
+//							ipv6_addr_set_by_eui64(&tmp, rpl_if_id, &tmp);
+//							ipv6_net_if_add_addr(rpl_if_id, &tmp,
+//									NDP_ADDR_STATE_PREFERRED,
+//									byteorder_ntohl(opt_prefix_info->valid_lifetime),
+//									byteorder_ntohl(opt_prefix_info->preferred_lifetime),
+//									0);
 							dio_dodag.prefix = opt_prefix_info->prefix;
 							dio_dodag.prefix_length = opt_prefix_info->prefix_length;
 							dio_dodag.prefix_valid_lifetime =
@@ -301,7 +343,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hd
 			DEBUGF("DIO with Rank < ROOT_RANK\n");
 		}
 
-		if (dio_dodag.mop != RPL_DEFAULT_MOP) {
+		if (dio_dodag.mop != NG_RPL_DEFAULT_MOP) {
 			DEBUGF("Required MOP not supported\n");
 		}
 
@@ -336,7 +378,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hd
 
 			return;
 		}
-		else if (RPL_COUNTER_GREATER_THAN(my_dodag->version, dio_dodag.version)) {
+		else if (NG_RPL_COUNTER_GREATER_THAN(my_dodag->version, dio_dodag.version)) {
 			/* lower version number detected -> send more DIOs */
 			trickle_reset_timer(&my_dodag->trickle);
 			return;
@@ -413,7 +455,7 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size, ng_ipv6_hdr_t* ipv6_hd
     ng_rpl_opt_t* dao_opt;
     while (len < data_size - ICMPV6_HDR_LEN) {
     	//DEBUGF("parsing DIO options\n");
-    	dao_opt = (ng_rpl_opt_t*)get_rpl_opt_from_buf(dio, len);
+    	dao_opt = get_rpl_opt_from_buf((uint8_t*)dao, len);
 
         switch (dao_opt->type) {
 
@@ -433,14 +475,14 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size, ng_ipv6_hdr_t* ipv6_hd
             }
 
             case (RPL_OPT_TARGET): {
-            	ng_rpl_opt_target_t* opt_target = (ng_rpl_opt_target_t*)get_rpl_opt_from_buf(dio, len);
+            	ng_rpl_opt_target_t* opt_target = (ng_rpl_opt_target_t*)get_rpl_opt_target_from_buf((uint8_t*)dao, len);
                 if (opt_target->prefix_length != RPL_DODAG_ID_LEN) {
                     DEBUGF("prefixes are not supported yet\n");
                     break;
                 }
 
                 len += (opt_target->length + RPL_OPT_LEN);
-                ng_rpl_opt_transit_t* opt_transit = (ng_rpl_opt_transit_t*)get_rpl_opt_from_buf(dio, len);
+                ng_rpl_opt_transit_t* opt_transit = get_rpl_opt_transit_from_buf((uint8_t*)dao, len);
 
                 if (opt_transit->type != RPL_OPT_TRANSIT) {
                     DEBUGF("[Error] - no transit information for target option type = %d\n",
@@ -460,8 +502,7 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size, ng_ipv6_hdr_t* ipv6_hd
 						ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &ipv6_hdr->src),
 						(opt_transit->path_lifetime * my_dodag->lifetime_unit));
 
-                //TODO: ng_rpl_add_routing_entry
-                rpl_add_routing_entry(&opt_target->target, &ipv6_hdr->src,
+                ng_rpl_add_routing_entry(&opt_target->target, &ipv6_hdr->src,
                 		opt_transit->path_lifetime * my_dodag->lifetime_unit);
 #endif
                 increment_seq = 1;

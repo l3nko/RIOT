@@ -82,6 +82,19 @@ void ng_rpl_init_root(ng_rpl_options_t *rpl_opts);
 void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
 					ng_icmpv6_hdr_t *hdr, uint8_t *data, size_t data_size);
 
+/**
+ * @brief Adds routing entry to routing table
+ *
+ * @deprecated This function is obsolete and will be removed shortly. This will be replaced with a
+ * common routing information base.
+ *
+ * @param[in] addr                  Destination address
+ * @param[in] next_hop              Next hop address
+ * @param[in] lifetime              Lifetime of the entry
+ *
+ * */
+void ng_rpl_add_routing_entry(ng_ipv6_addr_t *addr, ng_ipv6_addr_t *next_hop, uint16_t lifetime);
+
 #ifdef __cplusplus
 }
 #endif
