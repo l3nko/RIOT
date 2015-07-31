@@ -23,7 +23,7 @@
 #include "net/ng_ipv6.h"
 #include "net/ng_ipv6/ext/rh.h"
 #include "net/ng_netbase.h"
-#include "random.h"
+//#include "random.h"
 #include "utlist.h"
 #include "thread.h"
 #include "vtimer.h"
@@ -50,7 +50,8 @@ static ng_ipv6_nc_t *_last_router = NULL;   /* last router chosen as default
 /* random helper function */
 static inline uint32_t _rand(uint32_t min, uint32_t max)
 {
-    return (genrand_uint32() % (max - min)) + min;
+//    return (genrand_uint32() % (max - min)) + min;
+	return (0xCAFFCA00CACA0FBC % (max - min)) + min;
 }
 
 static bool _handle_sl2a_opt(kernel_pid_t iface, ng_pktsnip_t *pkt,
