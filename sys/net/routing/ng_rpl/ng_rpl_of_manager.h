@@ -15,6 +15,12 @@ extern "C" {
 #endif
 
 /**
+ * @brief Initialization of Manager and of-functions.
+ * @param[in]   my_address Own address for initialization of beaconing
+*/
+void ng_rpl_of_manager_init(ng_ipv6_addr_t *my_address);
+
+/**
  * @brief Returns objective function with a given cope point
  * @param[in]   ocp Objective code point of objective function
  * @return      Pointer of corresponding objective function implementation
