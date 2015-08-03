@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Freie Universität Berlin
+ * Copyright (C) 2013 Freie Universit��t Berlin
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -39,7 +39,7 @@ int _mersenne_init(int argc, char **argv)
         printf("PRNG initialized given value: %d\n", initval);
     }
 
-    genrand_init(initval);
+    random_init(initval);
 
     return 0;
 }
@@ -49,7 +49,7 @@ int _mersenne_get(int argc, char **argv)
     (void) argc;
     (void) argv;
 
-    printf("%" PRIu32 "\n", genrand_uint32());
+    printf("%" PRIu32 "\n", random_uint32());
 
     return 0;
 }
