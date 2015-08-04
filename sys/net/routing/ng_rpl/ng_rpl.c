@@ -44,7 +44,7 @@ void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
 		case RPL_DIS_CODE: {
 			//(rpl_dis_t *) & (rpl_buffer[IPV6_HDR_LEN + ICMPV6_HDR_LEN]));
 			ng_rpl_dis_t *dis = (ng_rpl_dis_t*) &data[NG_DATA_OFFSET];
-			ng_rpl_recv_DIS(dis, data_size);
+			ng_rpl_recv_DIS(dis, data_size, ipv6_hdr);
 			break;
 		}
 

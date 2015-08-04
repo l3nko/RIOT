@@ -20,6 +20,9 @@
 static char addr_str[IPV6_MAX_ADDR_STR_LEN];
 #endif
 
+static uint8_t send_buffer[260];
+//static uint8_t recv_buffer[260];
+
 static inline uint8_t NG_RPL_COUNTER_INCREMENT(uint8_t counter)
 {
     return (counter > RPL_COUNTER_LOWER_REGION ? (counter == RPL_COUNTER_MAX ? counter = 0 : ++counter) : (counter == RPL_COUNTER_LOWER_REGION ? counter = 0 : ++counter));
@@ -548,14 +551,17 @@ void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack, size_t data_size)
 	ng_rpl_dodag_t *dodag = ng_rpl_get_joined_dodag(dao_ack->rpl_instanceid);
 
 	if (dodag == NULL) {
+		DEBUG("DAO_ACK not good: dodag null\n");
 		return;
 	}
 
 	if (dao_ack->rpl_instanceid != dodag->instance->id) {
+		DEBUG("DAO_ACK not good: rpl instance id different\n");
 		return;
 	}
 
 	if (dao_ack->status != 0) {
+		DEBUG("DAO_ACK not good: status not zero\n");
 		return;
 	}
 
@@ -564,55 +570,304 @@ void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack, size_t data_size)
 }
 
 /* obligatory for each mode. normally not modified */
-//void rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_t next_header)
-//{
-//    uint8_t *p_ptr;
-////    ipv6_send_buf = get_rpl_send_ipv6_buf();
-////    p_ptr = get_rpl_send_payload_buf(ipv6_ext_hdr_len);
-//
-//    ipv6_send_buf->version_trafficclass = IPV6_VER;
-//    ipv6_send_buf->trafficclass_flowlabel = 0;
-//    ipv6_send_buf->flowlabel = 0;
-//    ipv6_send_buf->nextheader = next_header;
-//    ipv6_send_buf->hoplimit = MULTIHOP_HOPLIMIT;
-//    ipv6_send_buf->length = HTONS(p_len);
-//
-//    memcpy(&(ipv6_send_buf->destaddr), destination, 16);
-//    ipv6_net_if_get_best_src_addr(&(ipv6_send_buf->srcaddr), &(ipv6_send_buf->destaddr));
-//
-//    icmp_send_buf = get_rpl_send_icmpv6_buf(ipv6_ext_hdr_len);
-//    icmp_send_buf->checksum = icmpv6_csum(ipv6_send_buf, icmp_send_buf);
-//
-//    /* The packet was "assembled" in rpl_%mode%.c. Therefore rpl_send_buf was used.
-//     * Therefore memcpy is not needed because the payload is at the
-//     * right memory location already. */
-//
-//    if (p_ptr != payload) {
-//        memcpy(p_ptr, payload, p_len);
-//    }
-//
-//    ipv6_send_packet(ipv6_send_buf, NULL);
-//}
+void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_t code)
+{
+	//TODO: DA TESTARE !!!!!!!!
+	ng_pktsnip_t *pkt;
+	ng_pktsnip_t *hdr;
+	ng_ipv6_addr_t *src;
+
+	//prepare pkt
+    pkt = ng_icmpv6_build(NULL, NG_ICMPV6_RPL_CTRL, code, p_len);
+
+	if (pkt != NULL) {
+		memcpy(pkt->data, payload, p_len);
+	}
+	else {
+		puts("error: packet buffer full");
+		return;
+	}
+	//TODO: int ng_icmpv6_calc_csum(ng_pktsnip_t *hdr, ng_pktsnip_t *pseudo_hdr);
+
+	//build header
+	//TODO: farsi passare iface
+	kernel_pid_t iface = KERNEL_PID_UNDEF;
+	src = ng_ipv6_netif_find_best_src_addr(iface, destination);
+	hdr = ng_ipv6_hdr_build(pkt, (uint8_t *)src, sizeof(ng_ipv6_addr_t),
+								(uint8_t *)destination, sizeof(ng_ipv6_addr_t));
+
+	if(hdr != NULL) {
+		ng_ipv6_hdr_t* ipv6_hdr = (ng_ipv6_hdr_t *)hdr->data;
+		ipv6_hdr->hl = 255;
+		ipv6_hdr->v_tc_fl.u32 = 0x60; //IPV6_VER;
+		//    ipv6_send_buf->trafficclass_flowlabel = 0;
+		//    ipv6_send_buf->flowlabel = 0;
+		//    ipv6_send_buf->nextheader = next_header;
+		//    ipv6_send_buf->hoplimit = MULTIHOP_HOPLIMIT;
+		//    ipv6_send_buf->length = HTONS(p_len);
+	}
+	else {
+		puts("error: packet header buffer full");
+		return;
+	}
+
+	ng_netapi_send(iface, pkt);
+
+	//TODO: clear send_buffer
+	memset(send_buffer, 0x00, sizeof(send_buffer));
+}
 
 /* implementation of static functions */
 void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
                   uint8_t start_index)
 {
+	ng_rpl_dao_t* dao = (ng_rpl_dao_t*)send_buffer;
+#if RPL_DEFAULT_MOP == RPL_MOP_NON_STORING_MODE
+    (void) start_index;
+#endif
 
+#if ENABLE_DEBUG
+
+    if (destination) {
+        DEBUGF("Send DAO to %s\n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+    }
+    else {
+        DEBUGF("Send DAO to default destination\n");
+    }
+
+#endif
+
+    if (my_dodag == NULL) {
+        DEBUGF("send_DAO: I have no my_dodag\n");
+        return;
+    }
+
+    if (my_dodag->node_status == ROOT_NODE) {
+        return;
+    }
+
+    if (destination == NULL) {
+#if RPL_DEFAULT_MOP == RPL_MOP_NON_STORING_MODE
+        destination = &my_dodag->dodag_id;
+#else
+
+        if (my_dodag->my_preferred_parent == NULL) {
+            DEBUGF("send_DAO: my_dodag has no my_preferred_parent\n");
+            return;
+        }
+
+        destination = &my_dodag->my_preferred_parent->addr;
+#endif
+    }
+
+    if (default_lifetime) {
+        lifetime = my_dodag->default_lifetime;
+    }
+
+
+    dao->rpl_instanceid = my_dodag->instance->id;
+    dao->k_d_flags = 0x00;
+    dao->dao_sequence = my_dodag->dao_seq;
+
+    uint16_t opt_len = 0;
+//    rpl_send_opt_target_buf = get_rpl_send_opt_target_buf(DAO_BASE_LEN);
+    ng_rpl_opt_target_t* opt_target = get_rpl_opt_target_from_buf(send_buffer, DAO_BASE_LEN);
+
+
+#if RPL_DEFAULT_MOP != RPL_MOP_NON_STORING_MODE
+    /* add all targets from routing table as targets */
+    uint8_t entries = 0;
+    uint8_t continue_index = 0;
+
+    for (uint8_t i = start_index; i < rpl_max_routing_entries; i++) {
+        if (ng_rpl_get_routing_table()[i].used) {
+        	opt_target->type = RPL_OPT_TARGET;
+        	opt_target->length = RPL_OPT_TARGET_LEN;
+        	opt_target->flags = 0x00;
+        	opt_target->prefix_length = RPL_DODAG_ID_LEN;
+            memcpy(&opt_target->target, &rpl_get_routing_table()[i].address,
+                   sizeof(ng_ipv6_addr_t));
+            opt_len += RPL_OPT_TARGET_LEN_WITH_OPT_LEN;
+//            rpl_send_opt_transit_buf = get_rpl_send_opt_transit_buf(DAO_BASE_LEN + opt_len);
+            ng_rpl_opt_transit_t* opt_transit = get_rpl_opt_transit_from_buf(send_buffer, DAO_BASE_LEN + opt_len);
+            opt_transit->type = RPL_OPT_TRANSIT;
+            opt_transit->length = (RPL_OPT_TRANSIT_LEN - sizeof(ipv6_addr_t));
+            opt_transit->e_flags = 0x00;
+            opt_transit->path_control = 0x00; /* not used */
+            opt_transit->path_sequence = 0x00; /* not used */
+            opt_transit->path_lifetime = lifetime;
+            opt_len += (RPL_OPT_TRANSIT_LEN_WITH_OPT_LEN - sizeof(ipv6_addr_t));
+//            rpl_send_opt_target_buf = get_rpl_send_opt_target_buf(DAO_BASE_LEN + opt_len);
+            opt_target = get_rpl_opt_target_from_buf(send_buffer, DAO_BASE_LEN + opt_len);
+            entries++;
+        }
+
+        /* Split DAO, so packages don't get too big.
+         * The value 5 is based on experience. */
+        if (entries >= 5) {
+            continue_index = i + 1;
+            break;
+        }
+    }
+
+#endif
+    /* add own address */
+    opt_target->type = RPL_OPT_TARGET;
+    opt_target->length = RPL_OPT_TARGET_LEN;
+    opt_target->flags = 0x00;
+    opt_target->prefix_length = RPL_DODAG_ID_LEN;
+    if (!ng_ipv6_addr_is_unspecified(&my_dodag->prefix)) {
+    	ng_ipv6_addr_t tmp;
+        //TODO: ?!?!?
+//    	ng_ipv6_addr_set_by_eui64(&tmp, rpl_if_id, &my_dodag->prefix);
+        memcpy(&opt_target->target, &tmp, sizeof(ng_ipv6_addr_t));
+    }
+    else {
+    	//TODO: my_address?!?!
+//        memcpy(&opt_target->target, &my_address, sizeof(ng_ipv6_addr_t));
+    }
+    opt_len += RPL_OPT_TARGET_LEN_WITH_OPT_LEN;
+
+//    rpl_send_opt_transit_buf = get_rpl_send_opt_transit_buf(DAO_BASE_LEN + opt_len);
+    ng_rpl_opt_transit_t* opt_transit = get_rpl_opt_transit_from_buf(send_buffer, DAO_BASE_LEN + opt_len);
+    opt_transit->type = RPL_OPT_TRANSIT;
+    opt_transit->e_flags = 0x00;
+    opt_transit->path_control = 0x00;
+    opt_transit->path_sequence = 0x00;
+    opt_transit->path_lifetime = lifetime;
+
+#if RPL_DEFAULT_MOP == RPL_MOP_NON_STORING_MODE
+    opt_transit->length = RPL_OPT_TRANSIT_LEN;
+    memcpy(&opt_transit->parent, &my_dodag->my_preferred_parent->addr, sizeof(ng_ipv6_addr_t));
+    opt_len += RPL_OPT_TRANSIT_LEN_WITH_OPT_LEN;
+#else
+    rpl_send_opt_transit_buf->length = (RPL_OPT_TRANSIT_LEN - sizeof(ng_ipv6_addr_t));
+    opt_len += (RPL_OPT_TRANSIT_LEN_WITH_OPT_LEN - sizeof(ng_ipv6_addr_t));
+#endif
+
+//    uint16_t plen = ICMPV6_HDR_LEN + DAO_BASE_LEN + opt_len;
+//    rpl_send(destination, (uint8_t *)icmp_send_buf, plen, IPV6_PROTO_NUM_ICMPV6);
+    uint16_t plen = DAO_BASE_LEN + opt_len;
+    ng_rpl_send(destination, send_buffer, plen, RPL_DAO_CODE);
+
+#if RPL_DEFAULT_MOP != RPL_MOP_NON_STORING_MODE
+    if (continue_index > 1) {
+//        rpl_send_DAO(my_dodag, destination, lifetime, default_lifetime, continue_index);
+        ng_rpl_send_DAO(my_dodag, destination, lifetime, default_lifetime, continue_index)
+    }
+
+#endif
 }
 
 void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination)
 {
+	#if ENABLE_DEBUG
+    if (destination) {
+        DEBUGF("Send DAO ACK to %s\n",
+               ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+    }
+	#endif
 
+    if (my_dodag == NULL) {
+        return;
+    }
+
+    ng_rpl_dao_ack_t* dao_ack = (ng_rpl_dao_ack_t*)send_buffer;
+    dao_ack->rpl_instanceid = my_dodag->instance->id;
+    dao_ack->d_reserved = 0;
+    dao_ack->dao_sequence = my_dodag->dao_seq;
+    dao_ack->status = 0;
+
+    ng_rpl_send(destination, send_buffer, sizeof(ng_rpl_dao_ack_t), RPL_DAO_ACK_CODE);
 }
 
 void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination)
 {
+#if ENABLE_DEBUG
 
+    if (destination) {
+        DEBUGF("Send DIO to %s\n", ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+    }
+
+#endif
+
+    if (mydodag == NULL) {
+        DEBUGF("Error - trying to send DIO without being part of a dodag.\n");
+        return;
+    }
+
+    ng_rpl_dio_t* dio = (ng_rpl_dio_t*)send_buffer;
+    DEBUGF("Sending DIO with ");
+    dio->rpl_instanceid = mydodag->instance->id;
+    DEBUG("instance %02X ", dio->rpl_instanceid);
+    dio->version_number = mydodag->version;
+    dio->rank = byteorder_htons(mydodag->my_rank);
+    DEBUG("rank %04X\n", byteorder_ntohs(dio->rank));
+    dio->g_mop_prf = (mydodag->grounded << RPL_GROUNDED_SHIFT) |
+				     (mydodag->mop << RPL_MOP_SHIFT) | mydodag->prf;
+    dio->dtsn = mydodag->dtsn;
+    dio->flags = 0;
+    dio->reserved = 0;
+    dio->dodagid = mydodag->dodag_id;
+
+    uint16_t opt_hdr_len = 0;
+    /* DODAG configuration option */
+//    rpl_send_opt_dodag_conf_buf = get_rpl_send_opt_dodag_conf_buf(DIO_BASE_LEN);
+    ng_rpl_opt_dodag_conf_t* opt_dodag = get_rpl_opt_dodag_conf_from_buf(send_buffer, DIO_BASE_LEN);
+    opt_dodag->type = RPL_OPT_DODAG_CONF;
+    opt_dodag->length = RPL_OPT_DODAG_CONF_LEN;
+    opt_dodag->flags_a_pcs = 0;
+    opt_dodag->DIOIntDoubl = mydodag->dio_interval_doubling;
+    opt_dodag->DIOIntMin = mydodag->dio_min;
+    opt_dodag->DIORedun = mydodag->dio_redundancy;
+    opt_dodag->MaxRankIncrease = byteorder_htons(mydodag->maxrankincrease);
+    opt_dodag->MinHopRankIncrease = byteorder_htons(mydodag->minhoprankincrease);
+    opt_dodag->ocp = byteorder_htons(mydodag->of->ocp);
+    opt_dodag->reserved = 0;
+    opt_dodag->default_lifetime = mydodag->default_lifetime;
+    opt_dodag->lifetime_unit = byteorder_htons(mydodag->lifetime_unit);
+
+    opt_hdr_len += RPL_OPT_DODAG_CONF_LEN_WITH_OPT_LEN;
+
+    if (!ng_ipv6_addr_is_unspecified(&mydodag->prefix)) {
+//        rpl_send_opt_prefix_information_buf = get_rpl_send_opt_prefix_information_buf(DIO_BASE_LEN + opt_hdr_len);
+    	ng_rpl_opt_prefix_information_t* opt_prefix = get_rpl_opt_prefix_inf_from_buf(send_buffer, DIO_BASE_LEN + opt_hdr_len);
+    	opt_prefix->type = RPL_OPT_PREFIX_INFO;
+    	opt_prefix->length = RPL_OPT_PREFIX_INFO_LEN;
+    	opt_prefix->flags = mydodag->prefix_flags;
+    	opt_prefix->prefix = mydodag->prefix;
+    	opt_prefix->prefix_length = mydodag->prefix_length;
+        opt_prefix->preferred_lifetime = byteorder_htonl(mydodag->prefix_preferred_lifetime);
+        opt_prefix->valid_lifetime = byteorder_htonl(mydodag->prefix_valid_lifetime);
+
+        opt_hdr_len += RPL_OPT_PREFIX_INFO_LEN_WITH_OPT_LEN;
+    }
+
+//    uint16_t plen = ICMPV6_HDR_LEN + DIO_BASE_LEN + opt_hdr_len;
+//    rpl_send(destination, (uint8_t *)icmp_send_buf, plen, IPV6_PROTO_NUM_ICMPV6);
+    uint16_t plen = DIO_BASE_LEN + opt_hdr_len;
+    ng_rpl_send(destination, send_buffer, plen, RPL_DIO_CODE);
 }
 
 void rpl_send_DIS(ng_ipv6_addr_t *destination)
 {
+#if ENABLE_DEBUG
+
+    if (destination) {
+        DEBUGF("Send DIS to %s\n", ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+    }
+
+#endif
+
+
+    ng_rpl_dis_t* dis = (ng_rpl_dis_t*)send_buffer;
+    dis->flags = 0x00;
+    dis->reserved = 0x00;
+
+//    uint16_t plen = ICMPV6_HDR_LEN + DIS_BASE_LEN;
+//    rpl_send(destination, (uint8_t *)icmp_send_buf, plen, IPV6_PROTO_NUM_ICMPV6);
+    uint16_t plen = DIS_BASE_LEN;
+    ng_rpl_send(destination, send_buffer, plen, RPL_DIS_CODE);
 
 }
 

@@ -142,7 +142,7 @@ endif
 
 ifneq (,$(filter ng_ndp,$(USEMODULE)))
   USEMODULE += ng_icmpv6
-  #USEMODULE += random
+  USEMODULE += random
   USEMODULE += timex
   USEMODULE += vtimer
 endif
