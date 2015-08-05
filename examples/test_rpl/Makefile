@@ -22,6 +22,8 @@ USEMODULE += shell
 USEMODULE += ps
 USEMODULE += defaulttransceiver
 
+USEMODULE += random
+
 #modules for RPL
 #USEMODULE += rpl
 #USEMODULE += sixlowpan

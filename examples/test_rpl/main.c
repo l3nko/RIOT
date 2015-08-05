@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Freie Universität Berlin
+ * Copyright (C) 2014 Freie Universit��t Berlin
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
@@ -39,6 +39,8 @@
 
 // ps command
 #include "ps.h"
+
+#include "net/ng_rpl.h"
 
 
 #define ENABLE_DEBUG    (1)
@@ -219,10 +221,23 @@ int my_reboot_handler(int argc, char **argv)
     return 0;
 }
 
+int my_rpl_handler(int argc, char **argv)
+{
+    (void) argc; (void) argv;
+
+    ng_ipv6_addr_t addr = NG_IPV6_ADDR_UNSPECIFIED;
+//    ng_rpl_dodag_t dodag;
+//    ng_rpl_send_DIO(&dodag, &addr);
+    ng_rpl_send_DIS(&addr);
+
+    return 0;
+}
+
 static const shell_command_t myshell_commands[] = {
     // {"cmd", "my shell command", myShellcommand},
     {"ps", "Prints information about running threads", my_ps_handler},
     {"reboot", "Reboot the node", my_reboot_handler},
+	{"rpl", "Test rpl", my_rpl_handler},
     {NULL, NULL, NULL}
 };
 

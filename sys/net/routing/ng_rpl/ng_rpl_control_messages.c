@@ -13,6 +13,8 @@
 
 #define ENABLE_DEBUG    (0)
 #include "debug.h"
+#include <inttypes.h>	//TODO. da rimuovere, solo per debug!!
+#include "net/ng_nettype.h"
 
 #if ENABLE_DEBUG
 /* For PRIu16 etc. */
@@ -44,11 +46,11 @@ static inline bool NG_RPL_COUNTER_GREATER_THAN(uint8_t A, uint8_t B)
 }
 
 /********* static functions *********/
-void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
-                  uint8_t start_index);
-void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination);
-void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination);
-void rpl_send_DIS(ng_ipv6_addr_t *destination);
+//void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
+//                  uint8_t start_index);
+//void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination);
+//void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination);
+//void ng_rpl_send_DIS(ng_ipv6_addr_t *destination);
 /************************************/
 
 void ng_rpl_init_root(ng_rpl_options_t *rpl_opts)
@@ -345,7 +347,7 @@ void ng_rpl_recv_DIO(ng_rpl_dio_t* dio, size_t data_size, ng_ipv6_hdr_t *ipv6_hd
 	if (my_dodag == NULL) {
 		if (!has_dodag_conf_opt) {
 			DEBUGF("send DIS\n");
-			rpl_send_DIS(&ipv6_hdr->src);
+			ng_rpl_send_DIS(&ipv6_hdr->src);
 		}
 
 		if (byteorder_ntohs(dio->rank) < ROOT_RANK) {
@@ -573,27 +575,41 @@ void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack, size_t data_size)
 void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_t code)
 {
 	//TODO: DA TESTARE !!!!!!!!
-	ng_pktsnip_t *pkt;
+	ng_pktsnip_t rpl_pkt;
+	ng_pktsnip_t *icmpv6;
 	ng_pktsnip_t *hdr;
 	ng_ipv6_addr_t *src;
 
-	//prepare pkt
-    pkt = ng_icmpv6_build(NULL, NG_ICMPV6_RPL_CTRL, code, p_len);
+	rpl_pkt.type = NG_NETTYPE_ICMPV6;
+	rpl_pkt.data = (void*)payload;
+	rpl_pkt.size = p_len;
 
-	if (pkt != NULL) {
-		memcpy(pkt->data, payload, p_len);
+	/* ONLY DEBUG */
+	uint8_t* pkt_bufer = (uint8_t*)rpl_pkt.data;
+	printf("[ng_rpl] Dump pkt(0x%04x) with type %"PRIu8 " and size %d\n", &rpl_pkt,rpl_pkt.type, rpl_pkt.size);
+	for(uint16_t i=0; i<rpl_pkt.size; i++) {
+		printf("%"PRIu8 " ", pkt_bufer[i]);
 	}
-	else {
-		puts("error: packet buffer full");
-		return;
+	printf("\n");
+	/*********/
+
+	icmpv6 = ng_icmpv6_build(&rpl_pkt, NG_ICMPV6_RPL_CTRL, code, p_len);
+    //TODO: int ng_icmpv6_calc_csum(ng_pktsnip_t *hdr, ng_pktsnip_t *pseudo_hdr);
+
+    /* ONLY DEBUG */
+	uint8_t* icmpv6_bufer = (uint8_t*)icmpv6->data;
+	printf("[ng_rpl] Dump icmpv6(0x%04x) with type %"PRIu8 " size %d and next 0x%04x\n", icmpv6,icmpv6->type, icmpv6->size, icmpv6->next);
+	for(uint16_t i=0; i<icmpv6->size; i++) {
+		printf("%"PRIu8 " ", icmpv6_bufer[i]);
 	}
-	//TODO: int ng_icmpv6_calc_csum(ng_pktsnip_t *hdr, ng_pktsnip_t *pseudo_hdr);
+	printf("\n");
+	/*********/
 
 	//build header
 	//TODO: farsi passare iface
 	kernel_pid_t iface = KERNEL_PID_UNDEF;
 	src = ng_ipv6_netif_find_best_src_addr(iface, destination);
-	hdr = ng_ipv6_hdr_build(pkt, (uint8_t *)src, sizeof(ng_ipv6_addr_t),
+	hdr = ng_ipv6_hdr_build(icmpv6, (uint8_t *)src, sizeof(ng_ipv6_addr_t),
 								(uint8_t *)destination, sizeof(ng_ipv6_addr_t));
 
 	if(hdr != NULL) {
@@ -611,7 +627,16 @@ void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, 
 		return;
 	}
 
-	ng_netapi_send(iface, pkt);
+	/* ONLY DEBUG */
+	uint8_t* ipv6_bufer = (uint8_t*)hdr->data;
+	printf("[ng_rpl] Dump ipv6t(0x%04x) with type %"PRIu8 " size %d and next 0x%04x\n", hdr,hdr->type, hdr->size, hdr->next);
+	for(uint16_t i=0; i<hdr->size; i++) {
+		printf("%"PRIu8 " ", ipv6_bufer[i]);
+	}
+	printf("\n");
+	/*********/
+
+//	ng_netapi_send(iface, pkt);
 
 	//TODO: clear send_buffer
 	memset(send_buffer, 0x00, sizeof(send_buffer));
@@ -849,7 +874,7 @@ void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination)
     ng_rpl_send(destination, send_buffer, plen, RPL_DIO_CODE);
 }
 
-void rpl_send_DIS(ng_ipv6_addr_t *destination)
+void ng_rpl_send_DIS(ng_ipv6_addr_t *destination)
 {
 #if ENABLE_DEBUG
 
