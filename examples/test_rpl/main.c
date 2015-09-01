@@ -226,9 +226,9 @@ int my_rpl_handler(int argc, char **argv)
     (void) argc; (void) argv;
 
     ng_ipv6_addr_t addr = NG_IPV6_ADDR_UNSPECIFIED;
-//    ng_rpl_dodag_t dodag;
-//    ng_rpl_send_DIO(&dodag, &addr);
-    ng_rpl_send_DIS(&addr);
+    ng_rpl_dodag_t dodag;
+    ng_rpl_send_DIO(&dodag, &addr);
+//    ng_rpl_send_DIS(&addr);
 
     return 0;
 }

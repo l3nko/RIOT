@@ -11,7 +11,7 @@
 #include "net/ng_rpl.h"
 #include "net/ng_rpl/ng_rpl_config.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 #include <inttypes.h>	//TODO. da rimuovere, solo per debug!!
 #include "net/ng_nettype.h"
@@ -19,7 +19,7 @@
 #if ENABLE_DEBUG
 /* For PRIu16 etc. */
 #include <inttypes.h>
-static char addr_str[IPV6_MAX_ADDR_STR_LEN];
+static char addr_str[NG_IPV6_ADDR_MAX_STR_LEN];
 #endif
 
 static uint8_t send_buffer[260];
@@ -509,8 +509,8 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size, ng_ipv6_hdr_t* ipv6_hd
                 		opt_transit->path_lifetime * my_dodag->lifetime_unit);
 #elif (RPL_MAX_ROUTING_ENTRIES != 0)
                 DEBUG("Adding routing information: Target: %s, Source: %s, Lifetime: %u\n",
-						ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &opt_target->target),
-						ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, &ipv6_hdr->src),
+						ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, &opt_target->target),
+						ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, &ipv6_hdr->src),
 						(opt_transit->path_lifetime * my_dodag->lifetime_unit));
 
                 ng_rpl_add_routing_entry(&opt_target->target, &ipv6_hdr->src,
@@ -615,12 +615,15 @@ void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, 
 	if(hdr != NULL) {
 		ng_ipv6_hdr_t* ipv6_hdr = (ng_ipv6_hdr_t *)hdr->data;
 		ipv6_hdr->hl = 255;
-		ipv6_hdr->v_tc_fl.u32 = 0x60; //IPV6_VER;
+//		ipv6_hdr->v_tc_fl.u32 = 0x60; //IPV6_VER; ---> lo fa già ng_ipv6_hdr_build
 		//    ipv6_send_buf->trafficclass_flowlabel = 0;
 		//    ipv6_send_buf->flowlabel = 0;
 		//    ipv6_send_buf->nextheader = next_header;
 		//    ipv6_send_buf->hoplimit = MULTIHOP_HOPLIMIT;
 		//    ipv6_send_buf->length = HTONS(p_len);
+
+//		ipv6_hdr->nh = icmpv6->type;
+		ipv6_hdr->len.u16 = HTONS(icmpv6->type);
 	}
 	else {
 		puts("error: packet header buffer full");
@@ -654,7 +657,7 @@ void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint
 #if ENABLE_DEBUG
 
     if (destination) {
-        DEBUGF("Send DAO to %s\n", ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+        DEBUGF("Send DAO to %s\n", ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
     }
     else {
         DEBUGF("Send DAO to default destination\n");
@@ -789,7 +792,7 @@ void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination)
 	#if ENABLE_DEBUG
     if (destination) {
         DEBUGF("Send DAO ACK to %s\n",
-               ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+               ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
     }
 	#endif
 
@@ -811,7 +814,7 @@ void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination)
 #if ENABLE_DEBUG
 
     if (destination) {
-        DEBUGF("Send DIO to %s\n", ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+        DEBUGF("Send DIO to %s\n", ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
     }
 
 #endif
@@ -879,7 +882,7 @@ void ng_rpl_send_DIS(ng_ipv6_addr_t *destination)
 #if ENABLE_DEBUG
 
     if (destination) {
-        DEBUGF("Send DIS to %s\n", ng_ipv6_addr_to_str(addr_str, IPV6_MAX_ADDR_STR_LEN, destination));
+        DEBUGF("Send DIS to %s\n", ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
     }
 
 #endif

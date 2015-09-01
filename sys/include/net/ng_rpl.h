@@ -95,6 +95,16 @@ void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
  * */
 void ng_rpl_add_routing_entry(ng_ipv6_addr_t *addr, ng_ipv6_addr_t *next_hop, uint16_t lifetime);
 
+/*
+ * ONLY FOR DEBUG!!
+ */
+void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
+                  uint8_t start_index);
+void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination);
+void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination);
+void ng_rpl_send_DIS(ng_ipv6_addr_t *destination);
+/*************************************************/
+
 #ifdef __cplusplus
 }
 #endif
