@@ -509,8 +509,8 @@ void ng_rpl_recv_DAO(ng_rpl_dao_t* dao, size_t data_size, ng_ipv6_hdr_t* ipv6_hd
                 		opt_transit->path_lifetime * my_dodag->lifetime_unit);
 #elif (RPL_MAX_ROUTING_ENTRIES != 0)
                 DEBUG("Adding routing information: Target: %s, Source: %s, Lifetime: %u\n",
-						ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, &opt_target->target),
-						ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, &ipv6_hdr->src),
+						ng_ipv6_addr_to_str(addr_str, &opt_target->target, NG_IPV6_ADDR_MAX_STR_LEN),
+						ng_ipv6_addr_to_str(addr_str, &ipv6_hdr->src, NG_IPV6_ADDR_MAX_STR_LEN),
 						(opt_transit->path_lifetime * my_dodag->lifetime_unit));
 
                 ng_rpl_add_routing_entry(&opt_target->target, &ipv6_hdr->src,
@@ -586,24 +586,24 @@ void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, 
 
 	/* ONLY DEBUG */
 	uint8_t* pkt_bufer = (uint8_t*)rpl_pkt.data;
-	printf("[ng_rpl] Dump pkt(0x%04x) with type %"PRIu8 " and size %d\n", &rpl_pkt,rpl_pkt.type, rpl_pkt.size);
+	DEBUG("[ng_rpl] Dump pkt(%p) with type %"PRIu8 " and size %d\n", &rpl_pkt,rpl_pkt.type, rpl_pkt.size);
 	for(uint16_t i=0; i<rpl_pkt.size; i++) {
-		printf("%"PRIu8 " ", pkt_bufer[i]);
+		DEBUG("%"PRIu8 " ", pkt_bufer[i]);
 	}
-	printf("\n");
+	DEBUG("\n");
 	/*********/
 
 	icmpv6 = ng_icmpv6_build(&rpl_pkt, NG_ICMPV6_RPL_CTRL, code, p_len);
-    //TODO: int ng_icmpv6_calc_csum(ng_pktsnip_t *hdr, ng_pktsnip_t *pseudo_hdr);
+//    TODO: int ng_icmpv6_calc_csum(ng_pktsnip_t *hdr, ng_pktsnip_t *pseudo_hdr);
 
-    /* ONLY DEBUG */
-	uint8_t* icmpv6_bufer = (uint8_t*)icmpv6->data;
-	printf("[ng_rpl] Dump icmpv6(0x%04x) with type %"PRIu8 " size %d and next 0x%04x\n", icmpv6,icmpv6->type, icmpv6->size, icmpv6->next);
-	for(uint16_t i=0; i<icmpv6->size; i++) {
-		printf("%"PRIu8 " ", icmpv6_bufer[i]);
-	}
-	printf("\n");
-	/*********/
+//    /* ONLY DEBUG */
+//	uint8_t* icmpv6_bufer = (uint8_t*)icmpv6->data;
+//	DEBUG("[ng_rpl] Dump icmpv6(%p) with type %"PRIu8 " size %d and next 0x%04x\n", icmpv6,icmpv6->type, icmpv6->size, icmpv6->next);
+//	for(uint16_t i=0; i<icmpv6->size; i++) {
+//		DEBUG("%"PRIu8 " ", icmpv6_bufer[i]);
+//	}
+//	DEBUG("\n");
+//	/*********/
 
 	//build header
 	//TODO: farsi passare iface
@@ -630,19 +630,20 @@ void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, 
 		return;
 	}
 
-	/* ONLY DEBUG */
-	uint8_t* ipv6_bufer = (uint8_t*)hdr->data;
-	printf("[ng_rpl] Dump ipv6t(0x%04x) with type %"PRIu8 " size %d and next 0x%04x\n", hdr,hdr->type, hdr->size, hdr->next);
-	for(uint16_t i=0; i<hdr->size; i++) {
-		printf("%"PRIu8 " ", ipv6_bufer[i]);
-	}
-	printf("\n");
-	/*********/
+//	/* ONLY DEBUG */
+//	uint8_t* ipv6_bufer = (uint8_t*)hdr->data;
+//	printf("[ng_rpl] Dump ipv6t(%p) with type %"PRIu8 " size %d and next 0x%04x\n", hdr,hdr->type, hdr->size, hdr->next);
+//	for(uint16_t i=0; i<hdr->size; i++) {
+//		printf("%"PRIu8 " ", ipv6_bufer[i]);
+//	}
+//	printf("\n");
+//	/*********/
 
 //	ng_netapi_send(iface, pkt);
+	DEBUG("[ng_rpl] Message sent\n");
 
-	//TODO: clear send_buffer
-	memset(send_buffer, 0x00, sizeof(send_buffer));
+	//TODO: clear send_buffer --> necessario ?!?!
+//	memset(send_buffer, 0x0000, sizeof(send_buffer));
 }
 
 /* implementation of static functions */
@@ -657,16 +658,16 @@ void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint
 #if ENABLE_DEBUG
 
     if (destination) {
-        DEBUGF("Send DAO to %s\n", ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
+        DEBUG("Send DAO to %s\n", ng_ipv6_addr_to_str(addr_str, destination, NG_IPV6_ADDR_MAX_STR_LEN));
     }
     else {
-        DEBUGF("Send DAO to default destination\n");
+    	DEBUG("Send DAO to default destination\n");
     }
 
 #endif
 
     if (my_dodag == NULL) {
-        DEBUGF("send_DAO: I have no my_dodag\n");
+    	DEBUG("send_DAO: I have no my_dodag\n");
         return;
     }
 
@@ -680,7 +681,7 @@ void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint
 #else
 
         if (my_dodag->my_preferred_parent == NULL) {
-            DEBUGF("send_DAO: my_dodag has no my_preferred_parent\n");
+        	DEBUG("send_DAO: my_dodag has no my_preferred_parent\n");
             return;
         }
 
@@ -775,8 +776,7 @@ void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint
 
 //    uint16_t plen = ICMPV6_HDR_LEN + DAO_BASE_LEN + opt_len;
 //    rpl_send(destination, (uint8_t *)icmp_send_buf, plen, IPV6_PROTO_NUM_ICMPV6);
-    uint16_t plen = DAO_BASE_LEN + opt_len;
-    ng_rpl_send(destination, send_buffer, plen, RPL_DAO_CODE);
+    ng_rpl_send(destination, send_buffer, DAO_BASE_LEN + opt_len, RPL_DAO_CODE);
 
 #if RPL_DEFAULT_MOP != RPL_MOP_NON_STORING_MODE
     if (continue_index > 1) {
@@ -791,8 +791,8 @@ void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination)
 {
 	#if ENABLE_DEBUG
     if (destination) {
-        DEBUGF("Send DAO ACK to %s\n",
-               ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
+        DEBUG("Send DAO ACK to %s\n",
+               ng_ipv6_addr_to_str(addr_str, destination, NG_IPV6_ADDR_MAX_STR_LEN));
     }
 	#endif
 
@@ -806,26 +806,24 @@ void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination)
     dao_ack->dao_sequence = my_dodag->dao_seq;
     dao_ack->status = 0;
 
-    ng_rpl_send(destination, send_buffer, sizeof(ng_rpl_dao_ack_t), RPL_DAO_ACK_CODE);
+    ng_rpl_send(destination, send_buffer, DAO_ACK_LEN, RPL_DAO_ACK_CODE);
 }
 
 void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination)
 {
 #if ENABLE_DEBUG
-
     if (destination) {
-        DEBUGF("Send DIO to %s\n", ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
+        DEBUG("Send DIO to %s\n", ng_ipv6_addr_to_str(addr_str, destination, NG_IPV6_ADDR_MAX_STR_LEN));
     }
-
 #endif
 
     if (mydodag == NULL) {
-        DEBUGF("Error - trying to send DIO without being part of a dodag.\n");
+        DEBUG("Error - trying to send DIO without being part of a dodag.\n");
         return;
     }
 
     ng_rpl_dio_t* dio = (ng_rpl_dio_t*)send_buffer;
-    DEBUGF("Sending DIO with ");
+    DEBUG("Sending DIO with ");
     dio->rpl_instanceid = mydodag->instance->id;
     DEBUG("instance %02X ", dio->rpl_instanceid);
     dio->version_number = mydodag->version;
@@ -873,8 +871,7 @@ void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination)
 
 //    uint16_t plen = ICMPV6_HDR_LEN + DIO_BASE_LEN + opt_hdr_len;
 //    rpl_send(destination, (uint8_t *)icmp_send_buf, plen, IPV6_PROTO_NUM_ICMPV6);
-    uint16_t plen = DIO_BASE_LEN + opt_hdr_len;
-    ng_rpl_send(destination, send_buffer, plen, RPL_DIO_CODE);
+    ng_rpl_send(destination, send_buffer, DIO_BASE_LEN + opt_hdr_len, RPL_DIO_CODE);
 }
 
 void ng_rpl_send_DIS(ng_ipv6_addr_t *destination)
@@ -882,7 +879,7 @@ void ng_rpl_send_DIS(ng_ipv6_addr_t *destination)
 #if ENABLE_DEBUG
 
     if (destination) {
-        DEBUGF("Send DIS to %s\n", ng_ipv6_addr_to_str(addr_str, NG_IPV6_ADDR_MAX_STR_LEN, destination));
+        DEBUGF("Send DIS to %s\n", ng_ipv6_addr_to_str(addr_str, destination, NG_IPV6_ADDR_MAX_STR_LEN));
     }
 
 #endif
@@ -894,8 +891,7 @@ void ng_rpl_send_DIS(ng_ipv6_addr_t *destination)
 
 //    uint16_t plen = ICMPV6_HDR_LEN + DIS_BASE_LEN;
 //    rpl_send(destination, (uint8_t *)icmp_send_buf, plen, IPV6_PROTO_NUM_ICMPV6);
-    uint16_t plen = DIS_BASE_LEN;
-    ng_rpl_send(destination, send_buffer, plen, RPL_DIS_CODE);
+    ng_rpl_send(destination, send_buffer, DIS_BASE_LEN, RPL_DIS_CODE);
 
 }
 

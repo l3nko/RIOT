@@ -225,10 +225,33 @@ int my_rpl_handler(int argc, char **argv)
 {
     (void) argc; (void) argv;
 
-    ng_ipv6_addr_t addr = NG_IPV6_ADDR_UNSPECIFIED;
-    ng_rpl_dodag_t dodag;
-    ng_rpl_send_DIO(&dodag, &addr);
+    ng_ipv6_addr_t addr = NG_IPV6_ADDR_LOOPBACK; //NG_IPV6_ADDR_UNSPECIFIED;
+
+//    char addr_str[NG_IPV6_ADDR_MAX_STR_LEN];
+//	ng_ipv6_addr_to_str(addr_str, &addr, NG_IPV6_ADDR_MAX_STR_LEN);
+//	printf("Sending message to %s\n", addr_str);
+
+    /* DIS */
 //    ng_rpl_send_DIS(&addr);
+
+    /* dodag */
+    ng_rpl_dodag_t dodag;
+    ng_rpl_instance_t rpl_instance;
+    rpl_instance.id = 13;
+	dodag.instance = &rpl_instance;;
+	dodag.version = 22;
+	dodag.my_rank = 0x0102;
+//    dodag.prefix = NG_IPV6_ADDR_LOOPBACK; //{{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }};
+	dodag.dao_seq = 15;
+
+    /* DIO */
+//    ng_rpl_send_DIO(&dodag, &addr);
+
+    /* DAO_ACK */
+//    ng_rpl_send_DAO_ACK(&dodag, &addr);
+
+	/* DAO */
+    ng_rpl_send_DAO(&dodag, &addr, 1, 1, 1);
 
     return 0;
 }
