@@ -378,6 +378,8 @@ ng_rpl_parent_t* ng_rpl_find_preferred_parent(ng_rpl_dodag_t *my_dodag)
             /* send DAO with ZERO_LIFETIME to old parent */
         	//TODO
 //        	rpl_send_DAO(my_dodag, &my_dodag->my_preferred_parent->addr, 0, false, 0);
+//        	void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, ng_ipv6_addr_t *my_address,
+//        			uint8_t lifetime, bool default_lifetime, uint8_t start_index)
         }
 
         my_dodag->my_preferred_parent = best;

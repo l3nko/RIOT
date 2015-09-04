@@ -40,6 +40,10 @@ void ng_rpl_handle(kernel_pid_t iface, ng_ipv6_hdr_t *ipv6_hdr,
 	DEBUG("RPL msg received with code %" PRIu8 "\n", hdr->code);
 	#endif
 
+	if(!ng_ipv6_addr_equal(&ipv6_hdr->dst, ng_rpl_get_my_address())) {
+		ng_rpl_set_my_address(&ipv6_hdr->dst);
+	}
+
 	switch (hdr->code) {
 		case RPL_DIS_CODE: {
 			//(rpl_dis_t *) & (rpl_buffer[IPV6_HDR_LEN + ICMPV6_HDR_LEN]));

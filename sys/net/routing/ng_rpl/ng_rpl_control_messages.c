@@ -24,6 +24,7 @@ static char addr_str[NG_IPV6_ADDR_MAX_STR_LEN];
 
 static uint8_t send_buffer[260];
 //static uint8_t recv_buffer[260];
+static ng_ipv6_addr_t my_rpl_address;
 
 static inline uint8_t NG_RPL_COUNTER_INCREMENT(uint8_t counter)
 {
@@ -46,8 +47,8 @@ static inline bool NG_RPL_COUNTER_GREATER_THAN(uint8_t A, uint8_t B)
 }
 
 /********* static functions *********/
-//void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
-//                  uint8_t start_index);
+//void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination,
+//		uint8_t lifetime, bool default_lifetime, uint8_t start_index);
 //void ng_rpl_send_DAO_ACK(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination);
 //void ng_rpl_send_DIO(ng_rpl_dodag_t *mydodag, ng_ipv6_addr_t *destination);
 //void ng_rpl_send_DIS(ng_ipv6_addr_t *destination);
@@ -137,6 +138,16 @@ static ng_rpl_opt_transit_t* get_rpl_opt_transit_from_buf(uint8_t* buffer, uint1
 	return ((ng_rpl_opt_transit_t*) &(buffer[ICMPV6_HDR_LEN + offset]) );
 }
 /* end static functions */
+
+ng_ipv6_addr_t* ng_rpl_get_my_address(void)
+{
+	return &my_rpl_address;
+}
+
+void ng_rpl_set_my_address(ng_ipv6_addr_t* address)
+{
+	memcpy(address, &my_rpl_address, sizeof(ng_ipv6_addr_t));
+}
 
 void ng_rpl_recv_DIS(ng_rpl_dis_t* dis, size_t data_size, ng_ipv6_hdr_t* ipv6_hdr)
 {
@@ -648,7 +659,7 @@ void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, 
 
 /* implementation of static functions */
 void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint8_t lifetime, bool default_lifetime,
-                  uint8_t start_index)
+		uint8_t start_index)
 {
 	ng_rpl_dao_t* dao = (ng_rpl_dao_t*)send_buffer;
 #if RPL_DEFAULT_MOP == RPL_MOP_NON_STORING_MODE
@@ -747,13 +758,12 @@ void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint
     opt_target->prefix_length = RPL_DODAG_ID_LEN;
     if (!ng_ipv6_addr_is_unspecified(&my_dodag->prefix)) {
     	ng_ipv6_addr_t tmp;
-        //TODO: ?!?!?
-//    	ng_ipv6_addr_set_by_eui64(&tmp, rpl_if_id, &my_dodag->prefix);
+    	//TODO: ?!?!?!?
+//    	ipv6_addr_set_by_eui64(&tmp, rpl_if_id, &my_dodag->prefix);
         memcpy(&opt_target->target, &tmp, sizeof(ng_ipv6_addr_t));
     }
     else {
-    	//TODO: my_address?!?!
-//        memcpy(&opt_target->target, &my_address, sizeof(ng_ipv6_addr_t));
+        memcpy(&opt_target->target, &my_rpl_address, sizeof(ng_ipv6_addr_t));
     }
     opt_len += RPL_OPT_TARGET_LEN_WITH_OPT_LEN;
 
@@ -781,7 +791,7 @@ void ng_rpl_send_DAO(ng_rpl_dodag_t *my_dodag, ng_ipv6_addr_t *destination, uint
 #if RPL_DEFAULT_MOP != RPL_MOP_NON_STORING_MODE
     if (continue_index > 1) {
 //        rpl_send_DAO(my_dodag, destination, lifetime, default_lifetime, continue_index);
-        ng_rpl_send_DAO(my_dodag, destination, lifetime, default_lifetime, continue_index)
+        ng_rpl_send_DAO(my_dodag, destination, my_rpl_address, lifetime, default_lifetime, continue_index);
     }
 
 #endif

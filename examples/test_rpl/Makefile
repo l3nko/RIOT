@@ -44,7 +44,7 @@ USEMODULE += auto_init_ng_netif
 USEMODULE += ng_ipv6_default
 USEMODULE += ng_udp
 # This application dumps received packets to STDIO using the pktdump module
-USEMODULE += ng_pktdump
+//USEMODULE += ng_pktdump
 # Additional networking modules that can be dropped if not needed
 USEMODULE += ng_icmpv6_echo
 

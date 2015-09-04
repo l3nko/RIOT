@@ -14,6 +14,23 @@
 extern "C" {
 #endif
 
+
+/**
+ * @brief Receives a DIS message
+ *
+ * This function get current RPL addrres
+ *
+ */
+ng_ipv6_addr_t* ng_rpl_get_my_address(void);
+
+/**
+ * @brief Receives a DIS message
+ *
+ * This function get current RPL addrres
+ *
+ */
+void ng_rpl_set_my_address(ng_ipv6_addr_t* address);
+
 /**
  * @brief Receives a DIS message
  *
