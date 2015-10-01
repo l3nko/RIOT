@@ -585,26 +585,23 @@ void ng_rpl_recv_DAO_ACK(ng_rpl_dao_ack_t* dao_ack, size_t data_size)
 /* obligatory for each mode. normally not modified */
 void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, uint8_t code)
 {
-	//TODO: DA TESTARE !!!!!!!!
-	ng_pktsnip_t rpl_pkt;
+	ng_pktsnip_t *rpl_pkt;
 	ng_pktsnip_t *icmpv6;
 	ng_pktsnip_t *hdr;
 	ng_ipv6_addr_t *src;
 
-	rpl_pkt.type = NG_NETTYPE_ICMPV6;
-	rpl_pkt.data = (void*)payload;
-	rpl_pkt.size = p_len;
+	rpl_pkt = ng_pktbuf_add(NULL, (void*)payload, p_len, NG_NETTYPE_ICMPV6);
 
 	/* ONLY DEBUG */
-	uint8_t* pkt_bufer = (uint8_t*)rpl_pkt.data;
-	DEBUG("[ng_rpl] Dump pkt(%p) with type %"PRIu8 " and size %d\n", &rpl_pkt,rpl_pkt.type, rpl_pkt.size);
-	for(uint16_t i=0; i<rpl_pkt.size; i++) {
+	uint8_t* pkt_bufer = (uint8_t*)rpl_pkt->data;
+	DEBUG("[ng_rpl] Dump pkt(%p) with type %"PRIu8 ", size %d and data:\n", rpl_pkt,rpl_pkt->type, rpl_pkt->size);
+	for(uint16_t i=0; i<rpl_pkt->size; i++) {
 		DEBUG("%"PRIu8 " ", pkt_bufer[i]);
 	}
 	DEBUG("\n");
 	/*********/
 
-	icmpv6 = ng_icmpv6_build(&rpl_pkt, NG_ICMPV6_RPL_CTRL, code, p_len);
+	icmpv6 = ng_icmpv6_build(rpl_pkt, NG_ICMPV6_RPL_CTRL, code, p_len);
 //    TODO: int ng_icmpv6_calc_csum(ng_pktsnip_t *hdr, ng_pktsnip_t *pseudo_hdr);
 
 //    /* ONLY DEBUG */
@@ -617,9 +614,13 @@ void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, 
 //	/*********/
 
 	//build header
-	//TODO: farsi passare iface
-	kernel_pid_t iface = KERNEL_PID_UNDEF;
-	src = ng_ipv6_netif_find_best_src_addr(iface, destination);
+	ng_netreg_entry_t *ipv6_entry = ng_netreg_lookup(NG_NETTYPE_IPV6, NG_NETREG_DEMUX_CTX_ALL);
+	DEBUG("[ng_rpl] Found entry with pid %"PRIu8"...\n",ipv6_entry->pid);
+
+//	src = ng_ipv6_netif_find_best_src_addr(ipv6_entry->pid, destination);
+	src = destination;
+	DEBUG("[ng_rpl] Found src %s\n", ng_ipv6_addr_to_str(addr_str, src, NG_IPV6_ADDR_MAX_STR_LEN));
+
 	hdr = ng_ipv6_hdr_build(icmpv6, (uint8_t *)src, sizeof(ng_ipv6_addr_t),
 								(uint8_t *)destination, sizeof(ng_ipv6_addr_t));
 
@@ -650,8 +651,10 @@ void ng_rpl_send(ng_ipv6_addr_t *destination, uint8_t *payload, uint16_t p_len, 
 //	printf("\n");
 //	/*********/
 
-//	ng_netapi_send(iface, pkt);
-	DEBUG("[ng_rpl] Message sent\n");
+	DEBUG("[ng_rpl] Sending to pid %"PRIu8"...\n",ipv6_entry->pid);
+
+	int sent = ng_netapi_send(ipv6_entry->pid, hdr);
+	DEBUG("[ng_rpl] Message sent: %d\n", sent );
 
 	//TODO: clear send_buffer --> necessario ?!?!
 //	memset(send_buffer, 0x0000, sizeof(send_buffer));
