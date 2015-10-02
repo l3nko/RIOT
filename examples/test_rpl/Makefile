@@ -15,12 +15,22 @@ CFLAGS += -DDEVELHELP
 # Change this to 0 show compiler invocation lines by default:
 QUIET ?= 1
 
+ifneq (,$(filter udoo,$(BOARD)))
+	CFLAGS += -DXBEE_UART=UART_1
+	#to include xbee_params.h
+	CFLAGS += -I$(CURDIR)
+	
+	USEMODULE += xbee
+	USEMODULE += ng_nomac
+endif
+
 # Modules to include:
 USEMODULE += uart0
 USEMODULE += shell
 # USEMODULE += shell_commands
 USEMODULE += ps
-USEMODULE += defaulttransceiver
+#USEMODULE += defaulttransceiver
+#USEMODULE += cc2420
 
 USEMODULE += random
 
@@ -28,10 +38,13 @@ USEMODULE += random
 #USEMODULE += rpl
 #USEMODULE += sixlowpan
 #USEMODULE += ng_rpl
-#USEMODULE += ieee802154
+USEMODULE += ieee802154
 #USEMODULE += net_help
 #USEMODULE += net_if
 #USEMODULE += udp
+
+#USEMODULE += ng_ieee802154
+USEMODULE += ng_sixlowpan
 
 #my port of RPL on NG stack
 USEMODULE += ng_rpl
