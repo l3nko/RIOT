@@ -29,7 +29,7 @@
 #include "net/ng_ieee802154.h"
 #include "periph/cpuid.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 /**
@@ -409,6 +409,7 @@ static int _set_proto(xbee_t *dev, uint8_t *val, size_t len)
 int xbee_init(xbee_t *dev, uart_t uart, uint32_t baudrate,
               gpio_t reset_pin, gpio_t sleep_pin)
 {
+	DEBUG("xbee_init: step 0\n");
     uint8_t tmp[2];
 
     /* check device and bus parameters */
@@ -452,6 +453,7 @@ int xbee_init(xbee_t *dev, uart_t uart, uint32_t baudrate,
         }
         gpio_clear(sleep_pin);
     }
+    DEBUG("xbee_init: step 1\n");
     /* if reset pin is connected, do a hardware reset */
     if (reset_pin != GPIO_UNDEF) {
         gpio_clear(reset_pin);
@@ -471,6 +473,7 @@ int xbee_init(xbee_t *dev, uart_t uart, uint32_t baudrate,
     /* exit command mode */
     _at_cmd(dev, "ATCN\r");
 
+    DEBUG("xbee_init: step 2\n");
     /* load long address (we can not set it, its read only for Xbee devices) */
     _get_addr_long(dev, dev->addr_long.uint8, 8);
     /* set default channel */

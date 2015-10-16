@@ -13,6 +13,9 @@
 #include "cc2420_settings.h"
 #include "irq.h"
 
+#define ENABLE_DEBUG    (1)
+#include "debug.h"
+
 /* reg */
 void cc2420_write_reg(uint8_t addr, uint16_t value) {
     unsigned int cpsr = disableIRQ();
@@ -44,6 +47,8 @@ uint8_t cc2420_strobe(uint8_t c) {
     result = cc2420_txrx(c);
     cc2420_spi_unselect();
     restoreIRQ(cpsr);
+
+    DEBUG("cc2420_strobe: command %"PRIu8" and result %"PRIu8"\n", c, result);
     return result;
 }
 

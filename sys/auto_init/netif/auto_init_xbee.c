@@ -26,7 +26,7 @@
 #include "xbee.h"
 #include "xbee_params.h"
 
-#define ENABLE_DEBUG (0)
+#define ENABLE_DEBUG (1)
 #include "debug.h"
 
 #define XBEE_NUM (sizeof(xbee_params)/sizeof(xbee_params_t))
@@ -60,9 +60,11 @@ void auto_init_xbee(void)
             DEBUG("Error initializing XBee radio device!");
         }
         else {
-            ng_nomac_init(_nomac_stacks[i],
+        	DEBUG("Creating NOMAC thread...\n");
+        	kernel_pid_t nomac_pid = ng_nomac_init(_nomac_stacks[i],
                     XBEE_MAC_STACKSIZE, XBEE_MAC_PRIO, "xbee",
                     (ng_netdev_t *)&xbee_devs[i]);
+        	DEBUG("NOMAC thread created: %"PRIu8"\n", nomac_pid);
         }
     }
 }

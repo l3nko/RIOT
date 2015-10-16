@@ -79,9 +79,9 @@ endif
 SRC += sc_rtc.c
 
 #USEMODULE += crypto
-SRC += sc_uECC.c
-SRC += crc32.c
-SRC += sc_pbc.c
-SRC += sc_sensor_auth.c
+#SRC += sc_uECC.c
+#SRC += crc32.c
+#SRC += sc_pbc.c
+#SRC += sc_sensor_auth.c
 
 include $(RIOTBASE)/Makefile.base

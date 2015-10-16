@@ -225,7 +225,7 @@ int my_rpl_handler(int argc, char **argv)
 {
     (void) argc; (void) argv;
 
-    ng_ipv6_addr_t addr = NG_IPV6_ADDR_LOOPBACK; //NG_IPV6_ADDR_UNSPECIFIED;
+    ng_ipv6_addr_t addr = NG_IPV6_ADDR_ALL_NODES_IF_LOCAL; //NG_IPV6_ADDR_UNSPECIFIED;
 
 //    char addr_str[NG_IPV6_ADDR_MAX_STR_LEN];
 //	ng_ipv6_addr_to_str(addr_str, &addr, NG_IPV6_ADDR_MAX_STR_LEN);
@@ -252,6 +252,8 @@ int my_rpl_handler(int argc, char **argv)
 
 	/* DAO */
     ng_rpl_send_DAO(&dodag, &addr, 1, 1, 1);
+
+    printf("RPL finished !!!\n");
 
     return 0;
 }

@@ -32,19 +32,21 @@
 #include "board_uart0.h"
 
 //#define USE_RC5     //DEBUG!!!!
-#include "crypto/rc5.h"
-#include "crypto/aes.h"
-#include "uECC.h"
+//#include "crypto/rc5.h"
+//#include "crypto/aes.h"
+//#include "uECC.h"
 
 ////#include <assert.h>
 //#include "relic/relic.h"
 
 //SENSOR AUTHENTICATION
-#include "sensor_atuh.h"
-#include "periph/random.h"
+//#include "sensor_atuh.h"
+//#include "periph/random.h"
 
 //compiler-fix
+#ifndef MODULE_TRANSCEIVER
 #define MODULE_TRANSCEIVER
+#endif
 
 
 #if FEATURE_PERIPH_RTC
@@ -270,7 +272,7 @@ int main(void)
 //    puts("Generting Sokaka private key:");
 //    cp_sokaka_gen_prv(privateKey, thisID, strlen(thisID), &masterKey);
 
-    random_init();
+//    random_init();
 
     shell_run(&shell);
     return 0;

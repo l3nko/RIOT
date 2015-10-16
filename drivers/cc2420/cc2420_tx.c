@@ -18,7 +18,7 @@
 #include "irq.h"
 #include "hwtimer.h"
 
-#define ENABLE_DEBUG    (0)
+#define ENABLE_DEBUG    (1)
 #include "debug.h"
 
 static void cc2420_gen_pkt(uint8_t *buf, cc2420_packet_t *packet);

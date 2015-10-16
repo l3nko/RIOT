@@ -348,6 +348,11 @@ void auto_init(void)
     auto_init_ng_netdev_eth();
 #endif
 
+//#ifdef MODULE_CC2420	/* Add by Nicco */
+//    extern void auto_init_cc2420(void);
+//    auto_init_cc2420();
+//#endif
+
 #endif /* MODULE_AUTO_INIT_NG_NETIF */
 
 #ifdef MODULE_NG_IPV6_NETIF
