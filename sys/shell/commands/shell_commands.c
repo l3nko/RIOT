@@ -95,10 +95,10 @@ extern int _icmpv6_ping(int argc, char **argv);
 #endif
 #endif
 
-#ifdef MODULE_RANDOM
-extern int _mersenne_init(int argc, char **argv);
-extern int _mersenne_get(int argc, char **argv);
-#endif
+//#ifdef MODULE_RANDOM
+//extern int _mersenne_init(int argc, char **argv);
+//extern int _mersenne_get(int argc, char **argv);
+//#endif
 
 #ifdef MODULE_GNRC_NETIF
 extern int _netif_config(int argc, char **argv);
@@ -186,10 +186,10 @@ const shell_command_t _shell_command_list[] = {
     { "ping6", "Ping via ICMPv6", _icmpv6_ping },
 #endif
 #endif
-#ifdef MODULE_RANDOM
-    { "mersenne_init", "initializes the PRNG", _mersenne_init },
-    { "mersenne_get", "returns 32 bit of pseudo randomness", _mersenne_get },
-#endif
+//#ifdef MODULE_RANDOM
+//    { "mersenne_init", "initializes the PRNG", _mersenne_init },
+//    { "mersenne_get", "returns 32 bit of pseudo randomness", _mersenne_get },
+//#endif
 #if FEATURE_PERIPH_RTC
     {"rtc", "control RTC peripheral interface",  _rtc_handler},
 #endif
