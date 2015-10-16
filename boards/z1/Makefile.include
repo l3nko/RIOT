@@ -13,5 +13,8 @@ export OFLAGS = -O ihex
 export FLASHER = $(RIOTBASE)/dist/tools/goodfet/goodfet.bsl
 export FFLAGS = --z1 -I -c $(PORT) -r -e -p $(HEXFILE)
 
+# setup the boards dependencies
+include $(RIOTBOARD)/$(BOARD)/Makefile.dep
+
 # include the msp430 common Makefile
 include $(RIOTBOARD)/Makefile.include.msp430_common

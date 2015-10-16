@@ -11,13 +11,24 @@
  *
  * @file
  */
-
 #include <stdio.h>
 #include <inttypes.h>
 
 #include "od.h"
 #include "net/ipv6/hdr.h"
 #include "net/sixlowpan.h"
+
+#if 1
+#define ENABLE_DEBUG (0)
+#include "debug.h"
+
+void sixlowpan_print(uint8_t *data, size_t size)
+{
+	DEBUG("STUB of %s\n", __PRETTY_FUNCTION__);
+	DEBUG("data: %p size: %d", data, size);
+}
+
+#else
 
 void sixlowpan_print(uint8_t *data, size_t size)
 {
@@ -246,5 +257,6 @@ void sixlowpan_print(uint8_t *data, size_t size)
         od_hex_dump(data + offset, size - offset, OD_WIDTH_DEFAULT);
     }
 }
+#endif
 
 /** @} */

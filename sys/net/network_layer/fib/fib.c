@@ -19,11 +19,11 @@
  * @}
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
-#include <errno.h>
+//#include <inttypes.h>
+//#include <errno.h>
 #include "thread.h"
 #include "mutex.h"
 #include "msg.h"

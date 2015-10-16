@@ -104,6 +104,16 @@ extern "C" {
 #define USER_BTN_PRESSED   ((USER_BTN_PxIN & USER_BTN_MASK) == 0)
 #define USER_BTN_RELEASED  ((USER_BTN_PxIN & USER_BTN_MASK) != 0)
 
+/* CC2420 GPIO */
+#define CC2420_SPI          SPI_0
+#define CC2420_RESET        GPIO_PIN(P4,6)
+#define CC2420_CS           GPIO_PIN(P3,0)
+#define CC2420_SPI_CLK      SPI_SPEED_1MHZ
+#define CC2420_FIFO_INT     GPIO_PIN(P1,3)
+#define CC2420_FIFOP_INT    GPIO_PIN(P1,2)
+#define CC2420_POWER        GPIO_PIN(P4,5)
+#define CC2420_GIO1         GPIO_PIN(P1,4)
+
 #ifdef __cplusplus
 }
 #endif

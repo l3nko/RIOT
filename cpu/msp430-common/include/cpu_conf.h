@@ -28,8 +28,8 @@ extern "C" {
 #define MSP430_ISR_STACK_SIZE           (256)
 
 #ifndef GNRC_PKTBUF_SIZE
-#define GNRC_PKTBUF_SIZE                (2560)    /* TODO: Make this value
-                                                   * overall MTU dependent */
+#define GNRC_PKTBUF_SIZE                2048//1280//(2560)    /* TODO: Make this value
+                                            //       * overall MTU dependent */
 #endif
 /** @} */
 

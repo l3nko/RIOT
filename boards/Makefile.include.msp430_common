@@ -1,11 +1,16 @@
 # default toolchain prefix
-export PREFIX ?= msp430-
+#export PREFIX ?= msp430-
+#export PREFIX ?= /opt/msp430-4.7.0/bin/msp430-
+export PREFIX ?= /opt/msp430-4.7.2/bin/msp430-
 
 # define build specific options
 CFLAGS_CPU   = -mmcu=$(CPU_MODEL)
 CFLAGS_STYLE = -std=gnu99 -Wall -Wstrict-prototypes
 CFLAGS_LINK  =
+
 CFLAGS_DBG   = -gdwarf-2
+#CFLAGS_DBG   =
+
 CFLAGS_OPT  ?= -Os
 # export compiler flags
 export CFLAGS += $(CFLAGS_CPU) $(CFLAGS_STYLE) $(CFLAGS_LINK) $(CFLAGS_DBG) $(CFLAGS_OPT)

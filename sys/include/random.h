@@ -35,24 +35,26 @@ extern "C" {
  *
  * @param s seed for the PRNG
  */
-void genrand_init(uint32_t s);
+//void genrand_init(uint32_t s);
+void random_init(uint32_t s);
 
-/**
- * @brief initialize by an array with array-length
- * init_key is the array for initializing keys
- * key_length is its length
- * slight change for C++, 2004/2/26
- *
- * @param init_key array of keys (seeds) to initialize the PRNG
- * @param key_length number of lements in init_key
- */
-void genrand_init_by_array(uint32_t init_key[], int key_length);
+///**
+// * @brief initialize by an array with array-length
+// * init_key is the array for initializing keys
+// * key_length is its length
+// * slight change for C++, 2004/2/26
+// *
+// * @param init_key array of keys (seeds) to initialize the PRNG
+// * @param key_length number of lements in init_key
+// */
+//void genrand_init_by_array(uint32_t init_key[], int key_length);
 
 /**
  * @brief generates a random number on [0,0xffffffff]-interval
  * @return a random number on [0,0xffffffff]-interval
  */
-uint32_t genrand_uint32(void);
+//uint32_t genrand_uint32(void);
+uint32_t random_uint32(void);
 
 /**
  * @brief   generates a random number r with a <= r < b.
@@ -66,7 +68,8 @@ uint32_t genrand_uint32(void);
  */
 static inline uint32_t genrand_uint32_range(uint32_t a, uint32_t b)
 {
-    return (genrand_uint32() % (b - a)) + a;
+//    return (genrand_uint32() % (b - a)) + a;
+	return (random_uint32() % (b - a)) + a;
 }
 
 #if PRNG_FLOAT

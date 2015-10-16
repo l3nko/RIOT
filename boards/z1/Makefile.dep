@@ -1,0 +1,6 @@
+
+#optional features
+ifneq (,$(filter gnrc_netif_default,$(USEMODULE)))
+  USEMODULE += cc2420
+  USEMODULE += gnrc_nomac
+endif

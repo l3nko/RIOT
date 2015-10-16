@@ -30,8 +30,8 @@
 #ifndef GNRC_PKTBUF_H_
 #define GNRC_PKTBUF_H_
 
-#include <stdbool.h>
-#include <stdlib.h>
+//#include <stdbool.h>
+//#include <stdlib.h>
 #include <string.h>
 
 #include "atomic.h"

@@ -36,14 +36,14 @@ extern "C" {
  * @brief   Number of RPL instances
  */
 #ifndef GNRC_RPL_INSTANCES_NUMOF
-#define GNRC_RPL_INSTANCES_NUMOF (2)
+#define GNRC_RPL_INSTANCES_NUMOF 1//(2)
 #endif
 
 /**
  * @brief   Number of RPL dodags
  */
 #ifndef GNRC_RPL_DODAGS_NUMOF
-#define GNRC_RPL_DODAGS_NUMOF (4)
+#define GNRC_RPL_DODAGS_NUMOF 1//(4)
 #endif
 
 /**
