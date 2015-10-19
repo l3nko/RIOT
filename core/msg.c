@@ -125,7 +125,7 @@ static int _msg_send(msg_t *m, kernel_pid_t target_pid, bool block, unsigned sta
               sched_active_thread->pid);
         priority_queue_node_t n;
         n.priority = sched_active_thread->priority;
-        n.data = (unsigned int) sched_active_thread;
+        n.data = (unsigned int) (uintptr_t) sched_active_thread;
         n.next = NULL;
         DEBUG("msg_send: %" PRIkernel_pid ": Adding node to msg_waiters:\n",
               sched_active_thread->pid);
@@ -339,7 +339,7 @@ static int _msg_receive(msg_t *m, int block)
     else {
         DEBUG("_msg_receive: %" PRIkernel_pid ": _msg_receive(): Waking up waiting thread.\n",
               sched_active_thread->pid);
-        tcb_t *sender = (tcb_t*) node->data;
+        tcb_t *sender = (tcb_t*) (uintptr_t) node->data;
 
         if (queue_index >= 0) {
             /* We've already got a message from the queue. As there is a

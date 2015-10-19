@@ -61,15 +61,15 @@ char *thread_stack_init(thread_task_func_t task_func, void *arg, void *stack_sta
 
     /* ensure correct stack alignment (on 16-bit boundary) */
     stk &= 0xfffe;
-    unsigned short *stackptr = (unsigned short *)stk;
+    unsigned short *stackptr = (unsigned short *) (uintptr_t)stk;
 
     /* now make SP point on the first AVAILABLE slot in stack */
     --stackptr;
 
-    *stackptr = (unsigned short) sched_task_exit;
+    *stackptr = (unsigned short) (uintptr_t) sched_task_exit;
     --stackptr;
 
-    *stackptr = (unsigned short) task_func;
+    *stackptr = (unsigned short) (uintptr_t) task_func;
     --stackptr;
 
     /* initial value for SR */
@@ -78,7 +78,7 @@ char *thread_stack_init(thread_task_func_t task_func, void *arg, void *stack_sta
     --stackptr;
 
     /* set argument to task_func */
-    *stackptr = (unsigned short) arg;
+    *stackptr = (unsigned short) (uintptr_t) arg;
     --stackptr;
 
     /* Space for registers. */

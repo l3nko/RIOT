@@ -68,7 +68,7 @@ static void mutex_wait(struct mutex_t *mutex)
 
     priority_queue_node_t n;
     n.priority = (unsigned int) sched_active_thread->priority;
-    n.data = (unsigned int) sched_active_thread;
+    n.data = (unsigned int) (uintptr_t) sched_active_thread;
     n.next = NULL;
 
     DEBUG("%s: Adding node to mutex queue: prio: %" PRIu32 "\n", sched_active_thread->name, n.priority);
@@ -101,7 +101,7 @@ void mutex_unlock(struct mutex_t *mutex)
         return;
     }
 
-    tcb_t *process = (tcb_t *) next->data;
+    tcb_t *process = (tcb_t *) (uintptr_t) next->data;
     DEBUG("mutex_unlock: waking up waiting thread %" PRIkernel_pid "\n", process->pid);
     sched_set_status(process, STATUS_PENDING);
 
@@ -118,7 +118,7 @@ void mutex_unlock_and_sleep(struct mutex_t *mutex)
     if (ATOMIC_VALUE(mutex->val) != 0) {
         priority_queue_node_t *next = priority_queue_remove_head(&(mutex->queue));
         if (next) {
-            tcb_t *process = (tcb_t *) next->data;
+            tcb_t *process = (tcb_t *) (uintptr_t) next->data;
             DEBUG("%s: waking up waiter.\n", process->name);
             sched_set_status(process, STATUS_PENDING);
         }

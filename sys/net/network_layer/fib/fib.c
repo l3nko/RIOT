@@ -23,7 +23,7 @@
 //#include <stdlib.h>
 #include <string.h>
 //#include <inttypes.h>
-//#include <errno.h>
+#include <errno.h>
 #include "thread.h"
 #include "mutex.h"
 #include "msg.h"
@@ -343,7 +343,7 @@ int fib_add_entry(fib_table_t *table,
     mutex_lock(&mtx_access);
     DEBUG("[fib_add_entry]\n");
     size_t count = 1;
-    fib_entry_t *entry[count];
+    fib_entry_t *entry[1];
 
     /* check if dst and next_hop are valid pointers */
     if ((dst == NULL) || (next_hop == NULL)) {
@@ -352,8 +352,7 @@ int fib_add_entry(fib_table_t *table,
     }
 
     int ret = fib_find_entry(table, dst, dst_size, &(entry[0]), &count);
-
-    if (ret == 1) {
+    if(ret == 1) {
         /* we must take the according entry and update the values */
         ret = fib_upd_entry(entry[0], next_hop, next_hop_size, next_hop_flags, lifetime);
     }
@@ -373,7 +372,7 @@ int fib_update_entry(fib_table_t *table, uint8_t *dst, size_t dst_size,
     mutex_lock(&mtx_access);
     DEBUG("[fib_update_entry]\n");
     size_t count = 1;
-    fib_entry_t *entry[count];
+    fib_entry_t *entry[1];
     int ret = -ENOMEM;
 
     /* check if dst and next_hop are valid pointers */
@@ -403,7 +402,7 @@ void fib_remove_entry(fib_table_t *table, uint8_t *dst, size_t dst_size)
     mutex_lock(&mtx_access);
     DEBUG("[fib_remove_entry]\n");
     size_t count = 1;
-    fib_entry_t *entry[count];
+    fib_entry_t *entry[1];
 
     int ret = fib_find_entry(table, dst, dst_size, &(entry[0]), &count);
 
@@ -429,7 +428,7 @@ int fib_get_next_hop(fib_table_t *table, kernel_pid_t *iface_id,
     mutex_lock(&mtx_access);
     DEBUG("[fib_get_next_hop]\n");
     size_t count = 1;
-    fib_entry_t *entry[count];
+    fib_entry_t *entry[1];
 
     if ((iface_id == NULL)
         || (next_hop_size == NULL)

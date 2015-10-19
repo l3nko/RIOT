@@ -4,7 +4,16 @@
 export PREFIX ?= /opt/msp430-4.7.2/bin/msp430-
 
 # define build specific options
-CFLAGS_CPU   = -mmcu=$(CPU_MODEL)
+CFLAGS_CPU   = -mmcu=$(CPU_MODEL) 
+
+ifndef MSPGCC_VERSION
+	MSPGCC_VERSION := ${shell $(PREFIX)gcc -dumpversion}
+endif
+ifneq (,$(findstring 4.7.,$(MSPGCC_VERSION)))
+	#add support for 20 bit (MSP430X v4.7.X)
+	CFLAGS_CPU += -mmemory-model=large -mcode-region=any -mdata-region=far
+endif
+
 CFLAGS_STYLE = -std=gnu99 -Wall -Wstrict-prototypes
 CFLAGS_LINK  =
 
