@@ -25,7 +25,10 @@
 extern "C" {
 #endif
 
-/* nothing to do here, yet */
+// The following are defines for the base address of the memories and
+// peripherals on the top_s interface.
+#define PKA_BASE                0x44004000  // PKA
+#define PKA_RAM_BASE            0x44006000  // SRAM_PKA
 
 #ifdef __cplusplus
 }
