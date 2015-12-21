@@ -8,6 +8,8 @@
 #ifndef PKA_H_
 #define PKA_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -36,14 +38,14 @@ typedef struct
 
 typedef struct
 {
-  char*       name;				// Name of the curve.
-  uint8_t     ui8Size;			// Size of the curve in 32-bit word.
-  uint32_t*   pui32Prime;		// The prime that defines the field of the curve.
-  uint32_t*   pui32N;			// Order of the curve.
-  uint32_t*   pui32A;			// Co-efficient a of the equation.
-  uint32_t*   pui32B;			// co-efficient b of the equation.
-  uint32_t*   pui32Gx;			// x co-ordinate value of the generator point.
-  uint32_t*   pui32Gy;			// y co-ordinate value of the generator point.
+	const char*       name;				// Name of the curve.
+	const uint8_t     ui8Size;			// Size of the curve in 32-bit word.
+	const uint32_t*   pui32Prime;		// The prime that defines the field of the curve.
+	const uint32_t*   pui32N;			// Order of the curve.
+	const uint32_t*   pui32A;			// Co-efficient a of the equation.
+	const uint32_t*   pui32B;			// co-efficient b of the equation.
+	const uint32_t*   pui32Gx;			// x co-ordinate value of the generator point.
+	const uint32_t*   pui32Gy;			// y co-ordinate value of the generator point.
 } ecc_curve_info_t;
 
 
